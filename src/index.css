@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-luxury-bg: #050505;
+  --color-luxury-bg-secondary: #0A0A0A;
+  --color-luxury-purple: #8B5CF6;
+  --color-luxury-gold: #F59E0B;
+  --color-text-main: #FFFFFF;
+  --color-text-muted: #A1A1AA;
+  --color-glass: rgba(255, 255, 255, 0.02);
+  --color-glass-border: rgba(255, 255, 255, 0.05);
+  --color-glass-highlight: rgba(255, 255, 255, 0.1);
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-luxury-bg text-text-main antialiased overflow-x-hidden selection:bg-luxury-purple/30 selection:text-white;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-glass backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+  }
+  
+  .glass-card {
+    @apply bg-luxury-bg-secondary backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-2xl p-6 transition-all duration-500 hover:border-luxury-purple/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden;
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-luxury-purple via-white to-luxury-gold;
+  }
+
+  .text-gradient-purple {
+    @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-luxury-purple/70;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-500 bg-white text-black font-semibold rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95;
+  }
+  
+  .btn-premium-secondary {
+    @apply relative overflow-hidden transition-all duration-500 bg-transparent text-white border border-glass-border font-semibold rounded-full hover:bg-white/5 hover:border-luxury-purple/50;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #222222;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333333;
+}
