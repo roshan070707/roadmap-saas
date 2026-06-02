@@ -6,7 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react';
 
-const questions = [
+const BASE_QUESTIONS = [
+  {
+    id: 'targetCareer',
+    title: 'Select your target career path.',
+    options: ['MCA via NIMCET', 'Full Stack Developer', 'Cyber Security', 'Data Analyst', 'AI Engineer', 'Software Engineer']
+  },
   {
     id: 'degree',
     title: 'What is your current degree?',
@@ -23,16 +28,17 @@ const questions = [
     options: ['Absolute Beginner', 'Some Basics (HTML/CSS/C++)', 'Intermediate (Built Projects)', 'Advanced']
   },
   {
-    id: 'targetCareer',
-    title: 'Select your target career path.',
-    options: ['MCA via NIMCET', 'Full Stack Developer', 'Cyber Security', 'Data Analyst', 'AI Engineer', 'Software Engineer']
-  },
-  {
     id: 'studyHours',
     title: 'Available study hours per day?',
     options: ['1 - 2 Hours', '3 - 4 Hours', '5 - 6 Hours', '8+ Hours']
   }
 ];
+
+const NIMCET_DATE_QUESTION = {
+  id: 'examDate',
+  title: 'When is your target NIMCET exam?',
+  options: ['May 2026', 'May 2027', 'May 2028', 'I am not sure']
+};
 
 const RoadmapGenerator = () => {
   const [step, setStep] = useState(0);
@@ -41,8 +47,14 @@ const RoadmapGenerator = () => {
   
   const { isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
-  const generateRoadmap = useMutation(api.roadmaps.generateRoadmap);
+  const generateSmartRoadmap = useMutation(api.intelligence.generateSmartRoadmap);
   const navigate = useNavigate();
+
+  // Dynamically insert NIMCET question if applicable
+  const isNimcet = formData['targetCareer'] === 'MCA via NIMCET';
+  const questions = isNimcet 
+    ? [...BASE_QUESTIONS.slice(0, 1), NIMCET_DATE_QUESTION, ...BASE_QUESTIONS.slice(1)]
+    : BASE_QUESTIONS;
 
   const handleSelect = (option: string) => {
     const currentQ = questions[step];
@@ -61,12 +73,20 @@ const RoadmapGenerator = () => {
       
       setIsSubmitting(true);
       try {
-        const roadmapId = await generateRoadmap({
+        let mappedExamDate = undefined;
+        if (formData.examDate && formData.examDate !== 'I am not sure') {
+          // Approximate to May 15th of the selected year
+          const year = formData.examDate.split(' ')[1];
+          mappedExamDate = `${year}-05-15`;
+        }
+
+        const roadmapId = await generateSmartRoadmap({
           degree: formData.degree || '',
           semester: formData.semester || '',
           skills: formData.skills || '',
           targetCareer: formData.targetCareer || '',
           studyHours: formData.studyHours || '',
+          examDate: mappedExamDate,
         });
         navigate(`/roadmap/${roadmapId}`);
       } catch (error) {

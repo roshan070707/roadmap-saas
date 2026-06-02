@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Square, Clock, X, Maximize2, Minimize2, SkipForward, Flame, Flag, GripHorizontal } from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { ChevronDown } from 'lucide-react';
 
 type TimerMode = 'pomodoro' | 'deepWork' | 'sprint' | 'custom' | 'stopwatch';
 type TimerState = 'work' | 'break';
@@ -38,6 +39,26 @@ export const StudyTimer = () => {
 
   const saveSession = useMutation(api.study.saveSession);
   const studyStats = useQuery(api.study.getStats);
+  const activities = useQuery(api.activities.getRecentActivities);
+  const roadmaps = useQuery(api.roadmaps.getUserRoadmaps);
+  
+  const sessionHistory = activities?.filter((a: any) => a.type === "Completed Study Session") || [];
+
+  const [activeTab, setActiveTab] = useState<'stats' | 'history'>('stats');
+  const [selectedTopic, setSelectedTopic] = useState<string>('');
+  
+  // Extract all incomplete topics from the most recent active roadmap
+  const activeRoadmap = roadmaps && roadmaps.length > 0 ? roadmaps[0] : null;
+  const availableTopics = activeRoadmap?.careerPath?.roadmapSteps?.flatMap((step: any) => 
+    (step.topics || []).filter((t: string) => !(activeRoadmap.completedTopics || []).includes(t))
+  ) || [];
+
+  // Auto-select first available topic
+  useEffect(() => {
+    if (availableTopics.length > 0 && !selectedTopic) {
+      setSelectedTopic(availableTopics[0]);
+    }
+  }, [availableTopics, selectedTopic]);
 
   const getTargetDuration = () => {
     if (mode === 'stopwatch') return 0;
@@ -67,7 +88,14 @@ export const StudyTimer = () => {
       setIsSaving(true);
       const durationMins = mode === 'custom' ? customWork : MODES[mode].work;
       try {
-        await saveSession({ mode, durationMinutes: durationMins });
+        await saveSession({ 
+          roadmapId: activeRoadmap?._id,
+          startTime: Date.now() - (durationMins * 60 * 1000),
+          endTime: Date.now(),
+          duration: durationMins,
+          sessionType: mode,
+          topicName: selectedTopic || undefined
+        });
       } catch (error) {
         console.error("Failed to save session", error);
       } finally {
@@ -174,10 +202,31 @@ export const StudyTimer = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className={`fixed z-[60] transition-opacity duration-300 ${
-          isFullScreen ? 'inset-0 bg-luxury-bg/95 backdrop-blur-3xl flex flex-col items-center justify-center' : 'bottom-24 right-6 w-[420px] glass-card p-6 shadow-2xl border-text-main/10 active:cursor-grabbing cursor-grab'
+          isFullScreen 
+            ? 'inset-0 flex flex-col items-center justify-center overflow-hidden' 
+            : 'bottom-24 right-6 w-[calc(100vw-3rem)] md:w-[420px] glass-card p-6 shadow-2xl border-text-main/10 active:cursor-grabbing cursor-grab'
         }`}
       >
-        <div className="flex justify-between items-center w-full mb-6 cursor-default">
+        {isFullScreen && (
+          <>
+            <motion.div 
+              className="absolute inset-0 bg-luxury-bg/95 backdrop-blur-3xl -z-20"
+            />
+            <motion.div 
+              className="absolute inset-0 opacity-30 -z-10"
+              animate={{
+                background: [
+                  "radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)",
+                  "radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)",
+                  "radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)"
+                ]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </>
+        )}
+
+        <div className="flex justify-between items-center w-full mb-6 cursor-default relative z-10">
           <h3 className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] flex items-center gap-2">
             <GripHorizontal className="w-4 h-4 text-luxury-purple cursor-grab active:cursor-grabbing" /> {isFullScreen ? 'Focus Mode' : 'Study Timer'}
           </h3>
@@ -226,6 +275,26 @@ export const StudyTimer = () => {
           </div>
         )}
 
+        {/* Topic Selection */}
+        {!isFullScreen && timerState === 'work' && availableTopics.length > 0 && (
+          <div className="mb-6 w-full cursor-default relative group">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <ChevronDown className="w-4 h-4 text-text-muted group-hover:text-luxury-purple transition-colors" />
+            </div>
+            <select 
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              disabled={isActive}
+              className="w-full appearance-none bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main font-semibold focus:outline-none focus:border-luxury-purple transition-all shadow-inner disabled:opacity-50 disabled:cursor-not-allowed truncate pr-10"
+            >
+              <option value="" disabled>Select a topic to focus on...</option>
+              {availableTopics.map((topic: string) => (
+                <option key={topic} value={topic}>{topic}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Circular Timer UI */}
         <div className={`relative flex items-center justify-center mb-8 cursor-default ${isFullScreen ? 'scale-150 my-16' : ''}`}>
           <svg className="transform -rotate-90" width="260" height="260">
@@ -241,12 +310,13 @@ export const StudyTimer = () => {
               cx="130"
               cy="130"
               r={CIRCLE_RADIUS}
-              className={`transition-all duration-1000 ease-linear ${mode === 'stopwatch' ? 'stroke-blue-500' : timerState === 'work' ? 'stroke-luxury-purple' : 'stroke-green-500'}`}
+              className={`${mode === 'stopwatch' ? 'stroke-blue-500' : timerState === 'work' ? 'stroke-luxury-purple' : 'stroke-green-500'}`}
               strokeWidth="8"
               fill="transparent"
               strokeDasharray={CIRCLE_CIRCUMFERENCE}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -314,22 +384,69 @@ export const StudyTimer = () => {
 
         {/* Stats & Settings Panel */}
         {!isFullScreen && mode !== 'stopwatch' && (
-          <div className="mt-8 pt-6 border-t border-text-main/10 w-full cursor-default">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Today's Focus</div>
-                <div className="text-lg font-semibold text-text-main flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-luxury-gold" />
-                  {studyStats?.dailyTime || 0}m
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Total Sessions</div>
-                <div className="text-lg font-semibold text-text-main">
-                  {studyStats?.sessionsCount || 0}
-                </div>
-              </div>
+          <div className="mt-8 pt-6 border-t border-text-main/10 w-full cursor-default relative z-10">
+            <div className="flex gap-4 mb-4">
+              <button 
+                onClick={() => setActiveTab('stats')}
+                className={`text-xs uppercase tracking-wider font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'stats' ? 'border-luxury-purple text-luxury-purple' : 'border-transparent text-text-muted hover:text-text-main'}`}
+              >
+                Stats
+              </button>
+              <button 
+                onClick={() => setActiveTab('history')}
+                className={`text-xs uppercase tracking-wider font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'history' ? 'border-luxury-purple text-luxury-purple' : 'border-transparent text-text-muted hover:text-text-main'}`}
+              >
+                History
+              </button>
             </div>
+
+            <AnimatePresence mode="wait">
+              {activeTab === 'stats' ? (
+                <motion.div 
+                  key="stats"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Today's Focus</div>
+                    <div className="text-lg font-semibold text-text-main flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-luxury-gold" />
+                      {studyStats?.dailyTime || 0}m
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Total Sessions</div>
+                    <div className="text-lg font-semibold text-text-main">
+                      {studyStats?.sessionsCount || 0}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="history"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="max-h-[120px] overflow-y-auto scrollbar-hide space-y-2 pr-2"
+                >
+                  {sessionHistory.length === 0 ? (
+                    <div className="text-xs text-text-muted text-center py-4">No recent sessions.</div>
+                  ) : (
+                    sessionHistory.slice(0, 5).map((session: any) => (
+                      <div key={session._id} className="flex justify-between items-center py-2 border-b border-text-main/5 last:border-0 text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-text-main font-medium">{session.title}</span>
+                          <span className="text-[10px] text-text-muted">{new Date(session.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <span className="font-mono text-luxury-purple">{session.description?.replace('Completed a ', '')}</span>
+                      </div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </motion.div>

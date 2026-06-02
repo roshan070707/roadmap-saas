@@ -53,40 +53,37 @@ const Navbar = () => {
           onMouseLeave={() => setLogoHovered(false)}
         >
           <motion.div
-            animate={logoHovered ? { scale: 1.15, rotate: 90 } : { scale: [1, 1.05, 1], rotate: 0 }}
-            transition={{ duration: logoHovered ? 0.3 : 4, repeat: logoHovered ? 0 : Infinity, ease: "easeInOut" }}
-            className={`transition-all duration-300 z-10 ${logoHovered ? 'drop-shadow-[0_0_20px_rgba(139,92,246,0.8)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]'}`}
+            animate={{ 
+              y: logoHovered ? -2 : [0, -3, 0],
+              scale: logoHovered ? 1.05 : 1
+            }}
+            transition={{ 
+              duration: logoHovered ? 0.2 : 4, 
+              repeat: logoHovered ? 0 : Infinity, 
+              ease: "easeInOut" 
+            }}
+            className={`transition-all duration-300 z-10 ${logoHovered ? 'drop-shadow-[0_0_20px_rgba(139,92,246,0.8)]' : 'drop-shadow-[0_0_10px_rgba(139,92,246,0.2)]'}`}
           >
-            <Hexagon className={`w-7 h-7 transition-colors ${logoHovered ? 'text-luxury-purple fill-luxury-purple/20' : 'text-text-main fill-text-main/10'}`} />
+            <Hexagon className={`w-7 h-7 transition-colors duration-500 ${logoHovered ? 'text-luxury-purple fill-luxury-purple/30' : 'text-text-main fill-transparent'}`} />
           </motion.div>
-          <AnimatePresence>
-            {!logoHovered && (
-              <motion.div
-                initial={{ width: 0, opacity: 0, x: -20 }}
-                animate={{ width: "auto", opacity: 1, x: 0 }}
-                exit={{ width: 0, opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                <span className="text-lg font-bold tracking-[0.25em] text-text-main">
-                  ROADMAP
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="overflow-hidden">
+            <span className={`text-lg font-bold tracking-[0.25em] transition-all duration-500 ${logoHovered ? 'text-transparent bg-clip-text bg-gradient-to-r from-luxury-purple to-luxury-gold drop-shadow-[0_0_10px_rgba(139,92,246,0.3)]' : 'text-text-main'}`}>
+              ROADMAP
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8 lg:gap-10">
           <div className="flex items-center gap-6 lg:gap-8">
-            <Link 
-              to="/search"
+            <button 
+              onClick={() => document.dispatchEvent(new Event('open-command-palette'))}
               className="hidden lg:flex items-center gap-2 bg-text-main/5 hover:bg-text-main/10 border border-text-main/10 px-4 py-1.5 rounded-full text-xs text-text-muted transition-colors mr-4"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Search...</span>
               <kbd className="ml-2 px-1.5 py-0.5 bg-text-main/10 rounded font-mono text-[10px]">Ctrl K</kbd>
-            </Link>
+            </button>
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -168,13 +165,15 @@ const Navbar = () => {
             className="md:hidden bg-luxury-bg/95 backdrop-blur-xl border-b border-white/5 overflow-hidden"
           >
             <div className="px-6 py-8 flex flex-col gap-6">
-              <Link
-                to="/search"
-                className="text-text-muted hover:text-white transition-colors text-sm font-semibold uppercase tracking-[0.15em] flex items-center gap-2"
-                onClick={() => setMobileMenuOpen(false)}
+              <button
+                className="text-left text-text-muted hover:text-white transition-colors text-sm font-semibold uppercase tracking-[0.15em] flex items-center gap-2"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  document.dispatchEvent(new Event('open-command-palette'));
+                }}
               >
                 <Search className="w-4 h-4" /> Search
-              </Link>
+              </button>
               {navLinks.map((link) => (
                 <Link
                   key={link.name}

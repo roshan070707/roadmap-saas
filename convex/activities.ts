@@ -11,7 +11,7 @@ export const getRecentActivities = query({
       .query("activities")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
-      .take(10);
+      .take(15);
 
     return activities;
   }

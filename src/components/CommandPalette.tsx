@@ -2,10 +2,26 @@ import { useEffect, useState } from 'react';
 import { Command } from 'cmdk';
 import { Search, Compass, Trophy, Users, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+
+const STATIC_CAREERS = [
+  { title: "Frontend Engineer", icon: "💻", path: "/generator?preset=frontend" },
+  { title: "Backend Engineer", icon: "⚙️", path: "/generator?preset=backend" },
+  { title: "Data Scientist", icon: "📊", path: "/generator?preset=data" },
+  { title: "Product Manager", icon: "🎯", path: "/generator?preset=pm" },
+];
+
+const STATIC_SKILLS = [
+  { title: "React & Next.js", icon: "⚛️", path: "/generator?preset=react" },
+  { title: "System Design", icon: "🏗️", path: "/generator?preset=system-design" },
+  { title: "Machine Learning", icon: "🤖", path: "/generator?preset=ml" },
+];
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const roadmaps = useQuery(api.roadmaps.getUserRoadmaps);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -15,8 +31,15 @@ export function CommandPalette() {
       }
     };
 
+    const handleCustomOpen = () => setOpen(true);
+
     document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    document.addEventListener('open-command-palette', handleCustomOpen);
+    
+    return () => {
+      document.removeEventListener('keydown', down);
+      document.removeEventListener('open-command-palette', handleCustomOpen);
+    };
   }, []);
 
   if (!open) return null;
@@ -59,14 +82,43 @@ export function CommandPalette() {
               </Command.Item>
             </Command.Group>
 
-            <Command.Group heading="Actions" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider mt-2 border-t border-text-main/5">
-              <Command.Item 
-                onSelect={() => { navigate('/dashboard'); setOpen(false); }}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-text-main hover:bg-luxury-purple/10 hover:text-luxury-purple rounded-lg cursor-pointer transition-colors aria-selected:bg-luxury-purple/10 aria-selected:text-luxury-purple"
-              >
-                <Activity className="w-4 h-4" /> Go to Dashboard
-              </Command.Item>
+            <Command.Group heading="Curated Careers" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-luxury-gold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider mt-2 border-t border-text-main/5">
+              {STATIC_CAREERS.map((career) => (
+                <Command.Item 
+                  key={career.title}
+                  onSelect={() => { navigate(career.path); setOpen(false); }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-text-main hover:bg-luxury-gold/10 hover:text-luxury-gold rounded-lg cursor-pointer transition-colors aria-selected:bg-luxury-gold/10 aria-selected:text-luxury-gold"
+                >
+                  <span>{career.icon}</span> {career.title}
+                </Command.Item>
+              ))}
             </Command.Group>
+
+            <Command.Group heading="Master a Skill" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-blue-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider mt-2 border-t border-text-main/5">
+              {STATIC_SKILLS.map((skill) => (
+                <Command.Item 
+                  key={skill.title}
+                  onSelect={() => { navigate(skill.path); setOpen(false); }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-text-main hover:bg-blue-500/10 hover:text-blue-400 rounded-lg cursor-pointer transition-colors aria-selected:bg-blue-500/10 aria-selected:text-blue-400"
+                >
+                  <span>{skill.icon}</span> {skill.title}
+                </Command.Item>
+              ))}
+            </Command.Group>
+
+            {roadmaps && roadmaps.length > 0 && (
+              <Command.Group heading="Your Roadmaps" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-luxury-purple [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider mt-2 border-t border-text-main/5">
+                {roadmaps.map((rm) => (
+                  <Command.Item 
+                    key={rm._id}
+                    onSelect={() => { navigate(`/roadmap/${rm._id}`); setOpen(false); }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-text-main hover:bg-luxury-purple/10 hover:text-luxury-purple rounded-lg cursor-pointer transition-colors aria-selected:bg-luxury-purple/10 aria-selected:text-luxury-purple"
+                  >
+                    <Activity className="w-4 h-4" /> {rm.careerPath?.title || 'Untitled Roadmap'}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
 
           </Command.List>
         </Command>

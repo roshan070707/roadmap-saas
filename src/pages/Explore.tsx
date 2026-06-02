@@ -2,6 +2,10 @@ import { motion } from 'framer-motion';
 import { Compass, Code, Brain, Database, Shield, Layout, Briefcase, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Loader2 } from 'lucide-react';
+
 const categories = [
   { name: 'Engineering', icon: Code, color: 'text-blue-400', bg: 'bg-blue-400/10' },
   { name: 'AI & ML', icon: Brain, color: 'text-purple-400', bg: 'bg-purple-400/10' },
@@ -11,14 +15,8 @@ const categories = [
   { name: 'Product', icon: Briefcase, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
 ];
 
-const trendingPaths = [
-  { title: 'Full Stack Engineer', users: '12.5k', diff: 'Intermediate' },
-  { title: 'AI Engineer', users: '8.2k', diff: 'Advanced' },
-  { title: 'Data Scientist', users: '6.1k', diff: 'Intermediate' },
-  { title: 'UI/UX Designer', users: '4.8k', diff: 'Beginner' },
-];
-
 export default function Explore() {
+  const careerPaths = useQuery(api.roadmaps.getCareerPaths);
   return (
     <div className="min-h-screen bg-luxury-bg pt-32 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
@@ -52,26 +50,35 @@ export default function Explore() {
         </div>
 
         <h3 className="text-xl font-bold text-text-main mb-8 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-luxury-purple"/> Trending Paths</h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          {trendingPaths.map((path, idx) => (
-            <motion.div 
-              key={path.title}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.1 }}
-              className="glass-card p-8 group border-text-main/10 hover:border-luxury-purple/30 transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <h4 className="text-2xl font-bold text-text-main group-hover:text-luxury-purple transition-colors">{path.title}</h4>
-                  <span className="px-3 py-1 bg-text-main/5 rounded-full text-xs font-semibold text-text-muted">{path.diff}</span>
+        {careerPaths === undefined ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 text-luxury-purple animate-spin" />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {careerPaths.map((path, idx) => (
+              <motion.div 
+                key={path._id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1 }}
+                className="glass-card p-8 group border-text-main/10 hover:border-luxury-purple/30 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-2xl font-bold text-text-main group-hover:text-luxury-purple transition-colors">{path.title}</h4>
+                    <span className="px-3 py-1 bg-text-main/5 rounded-full text-xs font-semibold text-text-muted">{path.difficulty}</span>
+                  </div>
+                  <p className="text-text-muted mb-6 line-clamp-2">{path.description}</p>
                 </div>
-                <p className="text-text-muted mb-6">Join {path.users} learners on this path.</p>
-              </div>
-              <Link to="/generator" className="btn-premium-secondary px-6 py-2 w-max text-sm">Start Path</Link>
-            </motion.div>
-          ))}
-        </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-xs text-text-muted font-mono bg-text-main/5 px-2 py-1 rounded">Est. {path.duration}</div>
+                  <Link to={`/generator?preset=${path.title.toLowerCase().replace(/ /g, '-')}`} className="btn-premium-secondary px-6 py-2 w-max text-sm">Start Path</Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>

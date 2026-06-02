@@ -9,7 +9,7 @@ import Leaderboard from './pages/Leaderboard';
 import Explore from './pages/Explore';
 import Community from './pages/Community';
 import ShareView from './pages/ShareView';
-import Search from './pages/Search';
+import Profile from './pages/Profile';
 import { ThemeProvider } from './components/ThemeProvider';
 import { StudyTimer } from './components/StudyTimer';
 import { CommandPalette } from './components/CommandPalette';
@@ -32,7 +32,7 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/discover" element={<Navigate to="/explore" replace />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/search" element={<Search />} />
+              <Route path="/profile/:userId" element={<Profile />} />
               {/* Catch-all route to redirect unknown URLs to Home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

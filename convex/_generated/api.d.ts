@@ -8,9 +8,16 @@
  * @module
  */
 
+import type * as achievements from "../achievements.js";
 import type * as activities from "../activities.js";
 import type * as auth from "../auth.js";
+import type * as collaboration from "../collaboration.js";
+import type * as friends from "../friends.js";
 import type * as http from "../http.js";
+import type * as intelligence from "../intelligence.js";
+import type * as leaderboard from "../leaderboard.js";
+import type * as notifications from "../notifications.js";
+import type * as profiles from "../profiles.js";
 import type * as roadmaps from "../roadmaps.js";
 import type * as study from "../study.js";
 import type * as users from "../users.js";
@@ -22,9 +29,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  achievements: typeof achievements;
   activities: typeof activities;
   auth: typeof auth;
+  collaboration: typeof collaboration;
+  friends: typeof friends;
   http: typeof http;
+  intelligence: typeof intelligence;
+  leaderboard: typeof leaderboard;
+  notifications: typeof notifications;
+  profiles: typeof profiles;
   roadmaps: typeof roadmaps;
   study: typeof study;
   users: typeof users;

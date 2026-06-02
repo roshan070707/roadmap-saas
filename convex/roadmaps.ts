@@ -1,6 +1,8 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { checkAndUnlockAchievements } from "./achievements";
+import { syncLeaderboardStats } from "./leaderboard";
 
 // --- Career Paths ---
 
@@ -30,7 +32,10 @@ export const clearAndSeed = mutation({
             description: "Mastering the fundamentals of pure math.",
             duration: "2 Weeks",
             topics: ["Trigonometric Ratios", "Identities", "Heights and Distances", "Inverse Trigonometric Functions"],
-            resources: [{ name: "YouTube", type: "Video", url: "https://youtube.com" }, { name: "Practice Questions", type: "Doc" }]
+            resources: [
+              { name: "Neha Agrawal Mathematically Inclined", type: "Video", url: "https://www.youtube.com/c/NehaAgrawalMathematicallyInclined" }, 
+              { name: "RD Sharma Objective Mathematics", type: "Doc", url: "https://www.amazon.in/Objective-Mathematics-RD-Sharma/dp/8193663004" }
+            ]
           },
           { 
             phase: "Phase 2", 
@@ -38,7 +43,10 @@ export const clearAndSeed = mutation({
             description: "Differential and integral calculus mastery.",
             duration: "4 Weeks",
             topics: ["Limits & Continuity", "Derivatives", "Integration", "Differential Equations"],
-            resources: [{ name: "NCERT Textbooks", type: "Book" }]
+            resources: [
+              { name: "MIT OpenCourseWare Calculus", type: "Video", url: "https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/" },
+              { name: "NCERT Class 12 Math", type: "Book", url: "https://ncert.nic.in/textbook.php" }
+            ]
           },
           { 
             phase: "Phase 3", 
@@ -46,7 +54,10 @@ export const clearAndSeed = mutation({
             description: "Aptitude and problem-solving patterns.",
             duration: "3 Weeks",
             topics: ["Blood Relations", "Syllogism", "Seating Arrangement", "Puzzles"],
-            resources: [{ name: "RS Aggarwal", type: "Book" }]
+            resources: [
+              { name: "IndiaBix Reasoning", type: "Platform", url: "https://www.indiabix.com/logical-reasoning/questions-and-answers/" },
+              { name: "RS Aggarwal Logical Reasoning", type: "Book", url: "https://www.amazon.in/Modern-Approach-Verbal-Non-Verbal-Reasoning/dp/9352832165" }
+            ]
           }
         ]
       },
@@ -62,7 +73,10 @@ export const clearAndSeed = mutation({
             description: "Building responsive static websites.",
             duration: "4 Weeks",
             topics: ["HTML5", "CSS3 & Flexbox/Grid", "JavaScript Basics", "DOM Manipulation"],
-            resources: [{ name: "MDN Web Docs", type: "Documentation" }, { name: "FreeCodeCamp", type: "Course" }]
+            resources: [
+              { name: "MDN Web Docs", type: "Documentation", url: "https://developer.mozilla.org/" }, 
+              { name: "FreeCodeCamp Responsive Web Design", type: "Course", url: "https://www.freecodecamp.org/learn/responsive-web-design/" }
+            ]
           },
           { 
             phase: "Phase 2", 
@@ -70,7 +84,10 @@ export const clearAndSeed = mutation({
             description: "Building dynamic single-page applications.",
             duration: "6 Weeks",
             topics: ["Components & Props", "State & Effects", "Routing", "Context API"],
-            resources: [{ name: "React.dev", type: "Documentation" }]
+            resources: [
+              { name: "React Official Docs", type: "Documentation", url: "https://react.dev/learn" },
+              { name: "Framer Motion Docs", type: "Documentation", url: "https://www.framer.com/motion/" }
+            ]
           },
           { 
             phase: "Phase 3", 
@@ -78,7 +95,10 @@ export const clearAndSeed = mutation({
             description: "Creating RESTful APIs and server logic.",
             duration: "8 Weeks",
             topics: ["Node.js", "Express", "MongoDB", "SQL Basics"],
-            resources: [{ name: "Node.js Docs", type: "Documentation" }]
+            resources: [
+              { name: "Node.js API Ref", type: "Documentation", url: "https://nodejs.org/docs/latest/api/" },
+              { name: "Prisma ORM", type: "Documentation", url: "https://www.prisma.io/docs" }
+            ]
           }
         ]
       },
@@ -94,7 +114,10 @@ export const clearAndSeed = mutation({
             description: "Understanding how systems communicate.",
             duration: "6 Weeks",
             topics: ["OSI Model", "TCP/IP", "Linux Basics", "Windows Administration"],
-            resources: [{ name: "Network+ Guide", type: "Book" }, { name: "TryHackMe", type: "Platform" }]
+            resources: [
+              { name: "Professor Messer Network+", type: "Video", url: "https://www.professormesser.com/network-plus/n10-008/n10-008-video/n10-008-training-course/" }, 
+              { name: "TryHackMe Pre-Security", type: "Platform", url: "https://tryhackme.com/path/outline/presecurity" }
+            ]
           },
           { 
             phase: "Phase 2", 
@@ -102,7 +125,9 @@ export const clearAndSeed = mutation({
             description: "Core concepts of information security.",
             duration: "4 Weeks",
             topics: ["Cryptography", "Access Control", "Risk Management", "Firewalls"],
-            resources: [{ name: "Security+ Study Guide", type: "Book" }]
+            resources: [
+              { name: "Security+ Study Guide", type: "Book", url: "https://www.amazon.com/CompTIA-Security-Get-Certified-Ahead/dp/B096D1LGSK" }
+            ]
           },
           { 
             phase: "Phase 3", 
@@ -110,7 +135,9 @@ export const clearAndSeed = mutation({
             description: "Offensive security techniques.",
             duration: "8 Weeks",
             topics: ["Reconnaissance", "Scanning", "Exploitation", "Web App Hacking"],
-            resources: [{ name: "HackTheBox", type: "Platform" }]
+            resources: [
+              { name: "HackTheBox Academy", type: "Platform", url: "https://academy.hackthebox.com/" }
+            ]
           }
         ]
       },
@@ -126,7 +153,10 @@ export const clearAndSeed = mutation({
             description: "Foundational skills for AI.",
             duration: "6 Weeks",
             topics: ["Linear Algebra", "Calculus", "Probability", "Python Data Structures"],
-            resources: [{ name: "Khan Academy", type: "Course" }]
+            resources: [
+              { name: "3Blue1Brown Linear Algebra", type: "Video", url: "https://www.3blue1brown.com/topics/linear-algebra" },
+              { name: "Khan Academy Statistics", type: "Course", url: "https://www.khanacademy.org/math/statistics-probability" }
+            ]
           },
           { 
             phase: "Phase 2", 
@@ -134,7 +164,9 @@ export const clearAndSeed = mutation({
             description: "Supervised and unsupervised learning.",
             duration: "8 Weeks",
             topics: ["Regression", "Classification", "Clustering", "Scikit-Learn"],
-            resources: [{ name: "Andrew Ng ML Course", type: "Course" }]
+            resources: [
+              { name: "Machine Learning Specialization", type: "Course", url: "https://www.coursera.org/specializations/machine-learning-introduction" }
+            ]
           },
           { 
             phase: "Phase 3", 
@@ -142,7 +174,9 @@ export const clearAndSeed = mutation({
             description: "Neural networks and modern AI.",
             duration: "10 Weeks",
             topics: ["Neural Networks", "CNNs", "RNNs", "PyTorch/TensorFlow"],
-            resources: [{ name: "DeepLearning.ai", type: "Course" }]
+            resources: [
+              { name: "Fast.ai Practical Deep Learning", type: "Course", url: "https://course.fast.ai/" }
+            ]
           }
         ]
       }
@@ -236,9 +270,10 @@ export const togglePublicStatus = mutation({
     
     await ctx.db.insert("activities", {
       userId,
-      action: args.isPublic ? "Made a roadmap public" : "Made a roadmap private",
-      details: "",
-      timestamp: Date.now()
+      type: "Roadmap Update",
+      title: args.isPublic ? "Made a roadmap public" : "Made a roadmap private",
+      description: "",
+      createdAt: Date.now()
     });
   }
 });
@@ -275,9 +310,10 @@ export const generateRoadmap = mutation({
 
     await ctx.db.insert("activities", {
       userId,
-      action: "Started a new roadmap",
-      details: args.targetCareer,
-      timestamp: Date.now()
+      type: "Created Roadmap",
+      title: "Started a new roadmap",
+      description: args.targetCareer,
+      createdAt: Date.now()
     });
 
     return roadmapId;
@@ -323,11 +359,75 @@ export const toggleTopicCompletion = mutation({
     if (args.isCompleted) {
       await ctx.db.insert("activities", {
         userId,
-        action: "Completed a topic",
-        details: args.topicName,
-        timestamp: Date.now()
+        type: "Completed Topic",
+        title: "Completed a topic",
+        description: args.topicName,
+        createdAt: Date.now()
       });
+      await checkAndUnlockAchievements(ctx, userId);
+      await syncLeaderboardStats(ctx, userId);
     }
+
+    return { progress, newCompletedTopics };
+  }
+});
+
+export const verifyTopicCompletion = mutation({
+  args: {
+    roadmapId: v.id("userRoadmaps"),
+    topicName: v.string(),
+    submissionType: v.string(),
+    submissionContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const roadmap = await ctx.db.get(args.roadmapId);
+    if (!roadmap || roadmap.userId !== userId) throw new Error("Roadmap not found");
+
+    const careerPath = await ctx.db.get(roadmap.careerPathId);
+    if (!careerPath) throw new Error("Career path not found");
+
+    // Add verification record
+    await ctx.db.insert("topicVerifications", {
+      userId,
+      roadmapId: args.roadmapId,
+      topicName: args.topicName,
+      submissionType: args.submissionType,
+      submissionContent: args.submissionContent,
+      verifiedAt: Date.now(),
+    });
+
+    // Mark as completed
+    let newCompletedTopics = [...(roadmap.completedTopics ?? [])];
+    if (!newCompletedTopics.includes(args.topicName)) {
+      newCompletedTopics.push(args.topicName);
+    }
+
+    // Calculate progress
+    let totalTopics = 0;
+    careerPath.roadmapSteps.forEach(step => {
+      totalTopics += step.topics ? step.topics.length : 0;
+    });
+
+    const progress = totalTopics > 0 ? Math.round((newCompletedTopics.length / totalTopics) * 100) : 0;
+
+    await ctx.db.patch(args.roadmapId, {
+      completedTopics: newCompletedTopics,
+      progress,
+    });
+
+    await ctx.db.insert("activities", {
+      userId,
+      type: "Completed Topic",
+      title: "Verified and Completed a topic",
+      description: args.topicName,
+      createdAt: Date.now()
+    });
+    
+    await checkAndUnlockAchievements(ctx, userId);
+    await syncLeaderboardStats(ctx, userId);
 
     return { progress, newCompletedTopics };
   }
@@ -375,9 +475,10 @@ export const createCustomRoadmap = mutation({
 
     await ctx.db.insert("activities", {
       userId,
-      action: "Created a custom roadmap",
-      details: args.title,
-      timestamp: Date.now()
+      type: "Created Roadmap",
+      title: "Created a custom roadmap",
+      description: args.title,
+      createdAt: Date.now()
     });
 
     return roadmapId;
