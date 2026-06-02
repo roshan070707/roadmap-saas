@@ -47,10 +47,14 @@ export default defineSchema({
 
   activities: defineTable({
     userId: v.id("users"),
-    type: v.string(),
-    title: v.string(),
-    description: v.string(),
-    createdAt: v.number(),
+    type: v.optional(v.string()),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
+    // Legacy fields to allow schema to pass validation
+    action: v.optional(v.string()),
+    details: v.optional(v.string()),
+    timestamp: v.optional(v.number()),
   }).index("by_user", ["userId"]),
 
   achievements: defineTable({
