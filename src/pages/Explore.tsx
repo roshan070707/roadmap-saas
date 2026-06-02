@@ -14,9 +14,27 @@ const categories = [
   { name: 'Design', icon: Layout, color: 'text-pink-400', bg: 'bg-pink-400/10' },
   { name: 'Product', icon: Briefcase, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
 ];
+import { useState } from 'react';
+
+const categoryKeywords: Record<string, string[]> = {
+  'Engineering': ['Developer', 'Software', 'Full Stack', 'Frontend', 'Backend', 'Engineer', 'Web', 'MCA', 'NIMCET'],
+  'AI & ML': ['AI', 'Machine Learning', 'Intelligence', 'Neural'],
+  'Data Science': ['Data', 'Analytics', 'Scientist', 'Analyst'],
+  'Cyber Security': ['Security', 'Cyber', 'Hacker', 'Penetration'],
+  'Design': ['Design', 'UI', 'UX'],
+  'Product': ['Product', 'Manager', 'Management']
+};
 
 export default function Explore() {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const careerPaths = useQuery(api.roadmaps.getCareerPaths);
+
+  const filteredPaths = careerPaths?.filter(path => {
+    if (!selectedCategory) return true;
+    const keywords = categoryKeywords[selectedCategory] || [];
+    const searchString = `${path.title} ${path.description}`.toLowerCase();
+    return keywords.some(kw => searchString.includes(kw.toLowerCase()));
+  });
   return (
     <div className="min-h-screen bg-luxury-bg pt-32 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
@@ -38,9 +56,14 @@ export default function Explore() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="glass-card p-6 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform cursor-pointer group border-text-main/10 hover:border-luxury-purple/30"
+                onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
+                className={`glass-card p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer group ${
+                  selectedCategory === cat.name 
+                    ? 'border-luxury-purple bg-luxury-purple/10 scale-105 shadow-[0_0_20px_rgba(139,92,246,0.3)]' 
+                    : 'border-text-main/10 hover:border-luxury-purple/30 hover:scale-105'
+                }`}
               >
-                <div className={`w-12 h-12 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                <div className={`w-12 h-12 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center mb-4 transition-transform ${selectedCategory === cat.name ? 'scale-110' : 'group-hover:scale-110'}`}>
                   <Icon className="w-6 h-6" />
                 </div>
                 <span className="text-sm font-semibold text-text-main">{cat.name}</span>
@@ -50,13 +73,25 @@ export default function Explore() {
         </div>
 
         <h3 className="text-xl font-bold text-text-main mb-8 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-luxury-purple"/> Trending Paths</h3>
-        {careerPaths === undefined ? (
+        {filteredPaths === undefined ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 text-luxury-purple animate-spin" />
           </div>
+        ) : filteredPaths.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center glass-card">
+            <Compass className="w-12 h-12 text-text-muted mb-4 opacity-50" />
+            <h3 className="text-xl font-bold text-text-main mb-2">No paths found</h3>
+            <p className="text-text-muted">We couldn't find any career paths in this category yet.</p>
+            <button 
+              onClick={() => setSelectedCategory(null)}
+              className="mt-6 text-sm text-luxury-purple hover:text-luxury-gold transition-colors"
+            >
+              Clear filters
+            </button>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {careerPaths.map((path, idx) => (
+            {filteredPaths.map((path, idx) => (
               <motion.div 
                 key={path._id}
                 initial={{ opacity: 0, scale: 0.95 }}

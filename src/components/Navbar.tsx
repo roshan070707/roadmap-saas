@@ -12,6 +12,19 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoHovered, setLogoHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleLogoMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setMousePosition({ x, y });
+  };
+
+  const handleLogoMouseLeave = () => {
+    setLogoHovered(false);
+    setMousePosition({ x: 0, y: 0 });
+  };
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
   const user = useQuery(api.users.current);
@@ -45,32 +58,59 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-        {/* Logo */}
+        {/* Premium Magnetic Logo */}
         <Link 
           to="/" 
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-3 cursor-pointer group relative py-2"
           onMouseEnter={() => setLogoHovered(true)}
-          onMouseLeave={() => setLogoHovered(false)}
+          onMouseLeave={handleLogoMouseLeave}
+          onMouseMove={handleLogoMouseMove}
         >
+          {/* Animated Glow Backdrop */}
+          <motion.div 
+            className="absolute inset-0 bg-luxury-purple/20 blur-xl rounded-full"
+            animate={{ 
+              opacity: logoHovered ? 0.8 : 0,
+              scale: logoHovered ? 1.5 : 0.8 
+            }}
+            transition={{ duration: 0.5 }}
+          />
+          
           <motion.div
             animate={{ 
-              y: logoHovered ? -2 : [0, -3, 0],
+              x: logoHovered ? mousePosition.x * 0.15 : 0,
+              y: logoHovered ? mousePosition.y * 0.15 : [0, -3, 0],
               scale: logoHovered ? 1.05 : 1
             }}
             transition={{ 
-              duration: logoHovered ? 0.2 : 4, 
+              duration: logoHovered ? 0.1 : 4, 
               repeat: logoHovered ? 0 : Infinity, 
-              ease: "easeInOut" 
+              ease: logoHovered ? "linear" : "easeInOut" 
             }}
-            className={`transition-all duration-300 z-10 ${logoHovered ? 'drop-shadow-[0_0_20px_rgba(139,92,246,0.8)]' : 'drop-shadow-[0_0_10px_rgba(139,92,246,0.2)]'}`}
+            className="z-10"
           >
             <Hexagon className={`w-7 h-7 transition-colors duration-500 ${logoHovered ? 'text-luxury-purple fill-luxury-purple/30' : 'text-text-main fill-transparent'}`} />
           </motion.div>
-          <div className="overflow-hidden">
-            <span className={`text-lg font-bold tracking-[0.25em] transition-all duration-500 ${logoHovered ? 'text-transparent bg-clip-text bg-gradient-to-r from-luxury-purple to-luxury-gold drop-shadow-[0_0_10px_rgba(139,92,246,0.3)]' : 'text-text-main'}`}>
+          
+          <motion.div
+            animate={{
+              x: logoHovered ? mousePosition.x * 0.08 : 0,
+              y: logoHovered ? mousePosition.y * 0.08 : 0,
+            }}
+            transition={{ type: "spring", stiffness: 150, damping: 15 }}
+            className="overflow-hidden relative flex items-center z-10"
+          >
+            <span className={`text-lg font-bold tracking-[0.25em] transition-all duration-500 ${logoHovered ? 'text-transparent bg-clip-text bg-gradient-to-r from-luxury-purple to-luxury-gold drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]' : 'text-text-main'}`}>
               ROADMAP
             </span>
-          </div>
+            {/* Shine Sweep Animation */}
+            <motion.div 
+              className="absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 skew-x-[-20deg]"
+              initial={{ left: '-100%' }}
+              animate={logoHovered ? { left: '200%' } : { left: '-100%' }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+            />
+          </motion.div>
         </Link>
 
         {/* Desktop Nav */}

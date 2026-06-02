@@ -39,12 +39,9 @@ const AnimatedCounter = ({ value, label, duration = 2 }: { value: number, label:
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center pt-24 pb-12 overflow-hidden bg-luxury-bg">
+    <section className="relative min-h-screen flex flex-col justify-center pt-32 pb-12 overflow-hidden bg-luxury-bg">
+      {/* Background Elements */}
       <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
-          <Scene />
-        </Canvas>
-        
         {/* Subtle noise texture */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-20"
@@ -52,12 +49,11 @@ const Hero = () => {
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           }}
         ></div>
-        
         <div className="absolute inset-0 bg-radial-gradient from-transparent to-luxury-bg opacity-80 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-luxury-bg to-transparent pointer-events-none"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-12 items-center relative z-10 w-full">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-12 items-center relative z-10 w-full flex-grow">
         
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -97,7 +93,14 @@ const Hero = () => {
           </div>
         </motion.div>
 
-        <div className="hidden lg:block h-[600px] pointer-events-none"></div>
+        {/* 3D Scene Container */}
+        <div className="h-[400px] sm:h-[500px] lg:h-[700px] relative w-full mt-8 lg:mt-0 flex items-center justify-center">
+          <div className="absolute inset-0 lg:scale-125 z-0">
+            <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+              <Scene />
+            </Canvas>
+          </div>
+        </div>
 
       </div>
     </section>

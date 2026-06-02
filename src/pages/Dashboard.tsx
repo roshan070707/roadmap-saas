@@ -216,11 +216,6 @@ const Dashboard = () => {
                         <span className="text-text-main font-medium">{topic}</span>
                       </div>
                     ))}
-                    <div className="pt-4 flex justify-end">
-                      <Link to="/timer" className="btn-premium px-6 py-2 text-sm flex items-center gap-2">
-                        Start Session <ChevronRight className="w-4 h-4" />
-                      </Link>
-                    </div>
                   </div>
                 </div>
               ) : (

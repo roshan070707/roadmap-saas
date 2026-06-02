@@ -11,7 +11,6 @@ import Community from './pages/Community';
 import ShareView from './pages/ShareView';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './components/ThemeProvider';
-import { StudyTimer } from './components/StudyTimer';
 import { CommandPalette } from './components/CommandPalette';
 
 function App() {
@@ -37,7 +36,6 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
-          <StudyTimer />
           <CommandPalette />
         </div>
       </Router>
