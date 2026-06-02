@@ -1,4 +1,6 @@
 import Hero from '../components/Hero';
+import FeatureRibbon from '../components/FeatureRibbon';
+import UniversityTrust from '../components/UniversityTrust';
 import HowItWorks from '../components/HowItWorks';
 import CareerPaths from '../components/CareerPaths';
 import DashboardPreview from '../components/DashboardPreview';
@@ -10,6 +12,8 @@ const Home = () => {
   return (
     <main>
       <Hero />
+      <FeatureRibbon />
+      <UniversityTrust />
       <HowItWorks />
       <CareerPaths />
       <DashboardPreview />
