@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Hexagon, LogOut } from 'lucide-react';
+import { Menu, X, Hexagon, LogOut, Moon, Sun, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useConvexAuth } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { useTheme } from './ThemeProvider';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoHovered, setLogoHovered] = useState(false);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
   const user = useQuery(api.users.current);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,8 +30,9 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: 'Methodology', path: '/#methodology' },
-    { name: 'Pathways', path: '/#pathways' },
+    { name: 'Explore', path: '/explore' },
+    { name: 'Leaderboard', path: '/leaderboard' },
+    { name: 'Community', path: '/community' },
   ];
 
   return (
@@ -42,27 +46,58 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 cursor-pointer group">
-          <Hexagon className="text-white w-7 h-7 fill-white/10 group-hover:fill-white/20 transition-all duration-300" />
-          <span className="text-lg font-bold tracking-[0.25em] text-white">
-            ROADMAP
-          </span>
+        <Link 
+          to="/" 
+          className="flex items-center gap-3 cursor-pointer group"
+          onMouseEnter={() => setLogoHovered(true)}
+          onMouseLeave={() => setLogoHovered(false)}
+        >
+          <motion.div
+            animate={logoHovered ? { scale: 1.15, rotate: 90 } : { scale: [1, 1.05, 1], rotate: 0 }}
+            transition={{ duration: logoHovered ? 0.3 : 4, repeat: logoHovered ? 0 : Infinity, ease: "easeInOut" }}
+            className={`transition-all duration-300 z-10 ${logoHovered ? 'drop-shadow-[0_0_20px_rgba(139,92,246,0.8)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]'}`}
+          >
+            <Hexagon className={`w-7 h-7 transition-colors ${logoHovered ? 'text-luxury-purple fill-luxury-purple/20' : 'text-text-main fill-text-main/10'}`} />
+          </motion.div>
+          <AnimatePresence>
+            {!logoHovered && (
+              <motion.div
+                initial={{ width: 0, opacity: 0, x: -20 }}
+                animate={{ width: "auto", opacity: 1, x: 0 }}
+                exit={{ width: 0, opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden whitespace-nowrap"
+              >
+                <span className="text-lg font-bold tracking-[0.25em] text-text-main">
+                  ROADMAP
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-10">
-          <div className="flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-8 lg:gap-10">
+          <div className="flex items-center gap-6 lg:gap-8">
+            <Link 
+              to="/search"
+              className="hidden lg:flex items-center gap-2 bg-text-main/5 hover:bg-text-main/10 border border-text-main/10 px-4 py-1.5 rounded-full text-xs text-text-muted transition-colors mr-4"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Search...</span>
+              <kbd className="ml-2 px-1.5 py-0.5 bg-text-main/10 rounded font-mono text-[10px]">Ctrl K</kbd>
+            </Link>
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.path}
-                className="text-text-muted hover:text-white transition-colors text-xs font-semibold uppercase tracking-[0.15em]"
+                to={link.path}
+                className="text-text-muted hover:text-text-main transition-colors text-xs font-semibold uppercase tracking-[0.15em]"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
             {isAuthenticated && (
-              <Link to="/dashboard" className="text-luxury-gold hover:text-white transition-colors text-xs font-semibold uppercase tracking-[0.15em]">
+              <Link to="/dashboard" className="text-luxury-gold hover:text-luxury-purple transition-colors text-xs font-semibold uppercase tracking-[0.15em]">
                 Dashboard
               </Link>
             )}
@@ -72,22 +107,35 @@ const Navbar = () => {
               <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
             ) : isAuthenticated ? (
               <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="text-text-muted hover:text-text-main transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
                 <div className="flex items-center gap-2">
                   <img src={user?.image || "https://i.pravatar.cc/150"} alt="User" className="w-8 h-8 rounded-full border border-white/20" />
-                  <span className="text-sm font-medium text-white hidden lg:block">{user?.name}</span>
+                  <span className="text-sm font-medium text-text-main hidden lg:block">{user?.name}</span>
                 </div>
                 <button 
                   onClick={() => signOut()}
-                  className="text-text-muted hover:text-white transition-colors"
+                  className="text-text-muted hover:text-text-main transition-colors"
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              <button 
-                onClick={handleSignIn}
-                className="bg-white text-black px-6 py-2.5 rounded-full font-semibold text-xs uppercase tracking-[0.15em] hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="text-text-muted hover:text-text-main transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+                <button 
+                  onClick={handleSignIn}
+                  className="bg-text-main text-luxury-bg px-6 py-2.5 rounded-full font-semibold text-xs uppercase tracking-[0.15em] hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -96,13 +144,14 @@ const Navbar = () => {
                 </svg>
                 Sign In
               </button>
+              </div>
             )}
           </div>
         </div>
 
         {/* Mobile Toggle */}
         <button
-          className="md:hidden text-text-muted hover:text-white transition-colors"
+          className="md:hidden text-text-muted hover:text-text-main transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -119,22 +168,41 @@ const Navbar = () => {
             className="md:hidden bg-luxury-bg/95 backdrop-blur-xl border-b border-white/5 overflow-hidden"
           >
             <div className="px-6 py-8 flex flex-col gap-6">
+              <Link
+                to="/search"
+                className="text-text-muted hover:text-white transition-colors text-sm font-semibold uppercase tracking-[0.15em] flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Search className="w-4 h-4" /> Search
+              </Link>
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.name}
-                  href={link.path}
+                  to={link.path}
                   className="text-text-muted hover:text-white transition-colors text-sm font-semibold uppercase tracking-[0.15em]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.name}
-                </a>
+                </Link>
               ))}
               {isAuthenticated && (
-                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-luxury-gold hover:text-white transition-colors text-sm font-semibold uppercase tracking-[0.15em]">
+                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-luxury-gold hover:text-text-main transition-colors text-sm font-semibold uppercase tracking-[0.15em]">
                   Dashboard
                 </Link>
               )}
-              <div className="h-px bg-white/5 w-full my-2"></div>
+              
+              <button
+                onClick={() => {
+                  setTheme(theme === 'dark' ? 'light' : 'dark');
+                  setMobileMenuOpen(false);
+                }}
+                className="text-left text-text-muted hover:text-text-main transition-colors text-sm font-semibold uppercase tracking-[0.15em] flex items-center gap-2"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              
+              <div className="h-px bg-text-main/5 w-full my-2"></div>
               
               {!isLoading && (
                 isAuthenticated ? (

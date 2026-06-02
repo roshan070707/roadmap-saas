@@ -1,17 +1,13 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { motion } from 'framer-motion';
-import { Check, ArrowLeft, Loader2, PlayCircle, FileText, ExternalLink, Share2, Copy } from 'lucide-react';
+import { Check, Loader2, PlayCircle, FileText, ExternalLink, Hexagon } from 'lucide-react';
 import type { Id } from '../../convex/_generated/dataModel';
 
-const RoadmapView = () => {
+export default function ShareView() {
   const { id } = useParams();
   const roadmap = useQuery(api.roadmaps.getRoadmapById, { id: id as Id<"userRoadmaps"> });
-  const toggleTopic = useMutation(api.roadmaps.toggleTopicCompletion);
-  const togglePublic = useMutation(api.roadmaps.togglePublicStatus);
-  const [isCopied, setIsCopied] = useState(false);
 
   if (roadmap === undefined) {
     return (
@@ -23,73 +19,32 @@ const RoadmapView = () => {
 
   if (roadmap === null) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-luxury-bg pt-20">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-luxury-bg pt-20 px-6 text-center">
+        <Hexagon className="w-16 h-16 text-text-muted/50 mb-6" />
         <h2 className="text-2xl font-bold text-text-main mb-4">Roadmap Not Found</h2>
-        <Link to="/dashboard" className="text-luxury-purple hover:underline">Return to Dashboard</Link>
+        <p className="text-text-muted mb-8 max-w-md">This roadmap either doesn't exist or is not set to public. Ask the owner to make it public.</p>
+        <Link to="/" className="btn-premium px-8 py-3">Return Home</Link>
       </div>
     );
   }
-
-  if (!roadmap.careerPath) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-luxury-bg">
-        <h2 className="text-2xl font-bold text-text-main">Career Path Data Missing</h2>
-      </div>
-    );
-  }
-
-  const handleToggle = async (topicName: string, currentStatus: boolean) => {
-    // Only owner can toggle completion
-    if (!roadmap.isOwner) return;
-    
-    await toggleTopic({
-      roadmapId: roadmap._id,
-      topicName,
-      isCompleted: !currentStatus
-    });
-  };
-
-  const handleShare = async () => {
-    if (!roadmap.isPublic) {
-      await togglePublic({ roadmapId: roadmap._id, isPublic: true });
-    }
-    navigator.clipboard.writeText(window.location.href);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-luxury-bg pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
         
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-text-muted hover:text-text-main transition-colors mb-8 text-sm font-semibold uppercase tracking-wider">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
-
         {/* Header */}
-        <div className="mb-16 relative">
-          <div className="absolute top-0 right-0">
-            {roadmap.isOwner && (
-              <button 
-                onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 bg-text-main/5 hover:bg-text-main/10 rounded-full text-sm font-semibold text-text-main transition-colors border border-text-main/10"
-              >
-                {isCopied ? <Copy className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
-                {isCopied ? 'Link Copied!' : (roadmap.isPublic ? 'Share Link' : 'Make Public & Share')}
-              </button>
-            )}
-          </div>
+        <div className="mb-16 text-center">
           <div className="inline-block px-4 py-1.5 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 text-luxury-gold text-xs font-bold uppercase tracking-widest mb-6 mt-8 md:mt-0">
-            Generated Roadmap
+            Shared Roadmap
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-text-main mb-6">
             {roadmap.careerPath.title}
           </h1>
-          <p className="text-xl text-text-muted font-light leading-relaxed max-w-2xl">
+          <p className="text-xl text-text-muted font-light leading-relaxed max-w-2xl mx-auto">
             {roadmap.careerPath.description}
           </p>
           
-          <div className="flex flex-wrap gap-8 mt-8 pt-8 border-t border-text-main/5">
+          <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-text-main/5">
             <div>
               <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Estimated Duration</div>
               <div className="text-lg font-mono text-text-main">{roadmap.careerPath.duration}</div>
@@ -99,7 +54,7 @@ const RoadmapView = () => {
               <div className="text-lg font-mono text-text-main">{roadmap.careerPath.difficulty}</div>
             </div>
             <div>
-              <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Current Progress</div>
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Owner Progress</div>
               <div className="text-lg font-mono text-luxury-purple">{roadmap.progress}%</div>
             </div>
           </div>
@@ -114,8 +69,8 @@ const RoadmapView = () => {
             return (
               <motion.div 
                 key={index}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="relative group"
               >
@@ -124,13 +79,13 @@ const RoadmapView = () => {
                   className={`absolute -left-[45px] md:-left-[61px] w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all bg-luxury-bg z-10 ${
                     isStepCompleted 
                       ? 'border-luxury-purple bg-luxury-purple text-white shadow-[0_0_15px_rgba(139,92,246,0.5)]' 
-                      : 'border-text-main/20 group-hover:border-luxury-purple/50'
+                      : 'border-text-main/20'
                   }`}
                 >
                   {isStepCompleted && <Check className="w-3.5 h-3.5" />}
                 </div>
 
-                <div className={`glass-card transition-all duration-300 border-text-main/10 hover:border-luxury-purple/30`}>
+                <div className={`glass-card transition-all duration-300 border-text-main/10`}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-xs font-mono text-luxury-gold uppercase tracking-wider">{step.phase}</div>
                     <div className="text-xs text-text-muted font-medium uppercase tracking-wider">
@@ -153,9 +108,8 @@ const RoadmapView = () => {
                         return (
                           <div 
                             key={tIndex}
-                            onClick={() => handleToggle(topic, isCompleted)}
-                            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${roadmap.isOwner ? 'cursor-pointer' : 'cursor-default'} ${
-                              isCompleted ? 'bg-text-main/5 border-text-main/10' : 'bg-transparent border-text-main/5 hover:border-luxury-purple/30'
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-default ${
+                              isCompleted ? 'bg-text-main/5 border-text-main/10' : 'bg-transparent border-text-main/5'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border ${
@@ -201,9 +155,14 @@ const RoadmapView = () => {
           })}
         </div>
 
+        {/* CTA */}
+        <div className="mt-16 text-center bg-luxury-purple/5 border border-luxury-purple/20 rounded-2xl p-12">
+          <h2 className="text-2xl font-bold text-text-main mb-4">Want to track your own progress?</h2>
+          <p className="text-text-muted mb-8 max-w-md mx-auto">Create an account to generate personalized roadmaps, use the advanced study timer, and join the community.</p>
+          <Link to="/" className="btn-premium px-8 py-3">Get Started for Free</Link>
+        </div>
+
       </div>
     </div>
   );
-};
-
-export default RoadmapView;
+}

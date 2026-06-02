@@ -29,7 +29,7 @@ const AnimatedCounter = ({ value, label, duration = 2 }: { value: number, label:
 
   return (
     <div ref={ref} className="flex flex-col items-start">
-      <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+      <div className="text-3xl md:text-4xl font-bold text-text-main mb-1">
         {displayValue}{value > 100 ? '+' : '%'}
       </div>
       <div className="text-sm text-text-muted font-medium uppercase tracking-wider">{label}</div>
@@ -71,18 +71,18 @@ const Hero = () => {
             Tell us where you are today. We'll show you the absolute fastest path to where you want to be.
           </p>
           
-          <div className="flex flex-wrap gap-5 mt-2">
-            <Link to="/generator" className="btn-premium px-8 py-4 flex items-center gap-2 group">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-5 mt-2">
+            <Link to="/generator" className="btn-premium px-8 py-4 flex items-center justify-center gap-2 group w-full sm:w-auto">
               Generate My Roadmap
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <a href="#pathways" className="btn-premium-secondary px-8 py-4 flex items-center gap-2 group">
+            <a href="#pathways" className="btn-premium-secondary px-8 py-4 flex items-center justify-center gap-2 group w-full sm:w-auto">
               <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
               See Example Roadmaps
             </a>
           </div>
           
-          <div className="flex items-center gap-10 mt-12 pt-8 border-t border-glass-border">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-6 sm:gap-10 mt-12 pt-8 border-t border-glass-border">
             <AnimatedCounter value={10000} label="Students" duration={2.5} />
             <AnimatedCounter value={50} label="Career Paths" duration={2} />
             <AnimatedCounter value={95} label="Satisfaction" duration={2} />

@@ -1,31 +1,51 @@
 @import "tailwindcss";
 
 @theme {
-  --color-luxury-bg: #050505;
-  --color-luxury-bg-secondary: #0A0A0A;
+  --color-luxury-bg: var(--bg);
+  --color-luxury-bg-secondary: var(--bg-secondary);
   --color-luxury-purple: #8B5CF6;
   --color-luxury-gold: #F59E0B;
-  --color-text-main: #FFFFFF;
-  --color-text-muted: #A1A1AA;
-  --color-glass: rgba(255, 255, 255, 0.02);
-  --color-glass-border: rgba(255, 255, 255, 0.05);
-  --color-glass-highlight: rgba(255, 255, 255, 0.1);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --color-glass-highlight: var(--glass-highlight);
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
+  :root {
+    --bg: #FAFAFC;
+    --bg-secondary: #FFFFFF;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --glass: rgba(0, 0, 0, 0.02);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-highlight: rgba(0, 0, 0, 0.03);
+  }
+
+  .dark {
+    --bg: #050505;
+    --bg-secondary: #0A0A0A;
+    --text-main: #FFFFFF;
+    --text-muted: #A1A1AA;
+    --glass: rgba(255, 255, 255, 0.02);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-highlight: rgba(255, 255, 255, 0.1);
+  }
+
   body {
-    @apply bg-luxury-bg text-text-main antialiased overflow-x-hidden selection:bg-luxury-purple/30 selection:text-white;
+    @apply bg-luxury-bg text-text-main antialiased overflow-x-hidden selection:bg-luxury-purple/30 selection:text-text-main transition-colors duration-300;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-glass backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+    @apply bg-glass backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)];
   }
   
   .glass-card {
-    @apply bg-luxury-bg-secondary backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-2xl p-6 transition-all duration-500 hover:border-luxury-purple/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden;
+    @apply bg-luxury-bg-secondary backdrop-blur-xl border border-glass-border shadow-[0_8px_32px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-2xl p-6 transition-all duration-500 hover:border-luxury-purple/40 dark:hover:border-luxury-purple/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden;
   }
 
   .text-glow-purple {
@@ -33,19 +53,19 @@
   }
   
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-luxury-purple via-white to-luxury-gold;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-luxury-purple via-text-main to-luxury-gold dark:via-white;
   }
 
   .text-gradient-purple {
-    @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-luxury-purple/70;
+    @apply bg-clip-text text-transparent bg-gradient-to-b from-text-main dark:from-white to-luxury-purple/70;
   }
 
   .btn-premium {
-    @apply relative overflow-hidden transition-all duration-500 bg-white text-black font-semibold rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95;
+    @apply relative overflow-hidden transition-all duration-500 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-full hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95;
   }
   
   .btn-premium-secondary {
-    @apply relative overflow-hidden transition-all duration-500 bg-transparent text-white border border-glass-border font-semibold rounded-full hover:bg-white/5 hover:border-luxury-purple/50;
+    @apply relative overflow-hidden transition-all duration-500 bg-transparent text-text-main border border-glass-border font-semibold rounded-full hover:bg-black/5 dark:hover:bg-white/5 hover:border-luxury-purple/50;
   }
 }
 
@@ -54,12 +74,11 @@
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #050505;
+  @apply bg-luxury-bg;
 }
 ::-webkit-scrollbar-thumb {
-  background: #222222;
-  border-radius: 4px;
+  @apply bg-text-muted/20 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  @apply bg-text-muted/40;
 }
