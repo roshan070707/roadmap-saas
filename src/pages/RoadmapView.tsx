@@ -107,8 +107,8 @@ const RoadmapView = () => {
 
         {/* Timeline */}
         <div className="relative border-l border-text-main/10 ml-4 md:ml-8 pl-8 md:pl-12 space-y-12">
-          {roadmap.careerPath.roadmapSteps.map((step: any, index: number) => {
-            const completedTopicsInStep = step.topics.filter((t: string) => roadmap.completedTopics.includes(t));
+          {roadmap.careerPath?.roadmapSteps?.map((step: any, index: number) => {
+            const completedTopicsInStep = step.topics.filter((t: string) => (roadmap.completedTopics ?? []).includes(t));
             const isStepCompleted = completedTopicsInStep.length === step.topics.length && step.topics.length > 0;
             
             return (
@@ -149,7 +149,7 @@ const RoadmapView = () => {
                     <div className="mb-6 space-y-2">
                       <h4 className="text-sm font-semibold text-text-main mb-3">Topics</h4>
                       {step.topics.map((topic: string, tIndex: number) => {
-                        const isCompleted = roadmap.completedTopics.includes(topic);
+                        const isCompleted = (roadmap.completedTopics ?? []).includes(topic);
                         return (
                           <div 
                             key={tIndex}

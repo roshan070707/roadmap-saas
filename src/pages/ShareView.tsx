@@ -38,20 +38,20 @@ export default function ShareView() {
             Shared Roadmap
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-text-main mb-6">
-            {roadmap.careerPath.title}
+            {roadmap.careerPath?.title}
           </h1>
           <p className="text-xl text-text-muted font-light leading-relaxed max-w-2xl mx-auto">
-            {roadmap.careerPath.description}
+            {roadmap.careerPath?.description}
           </p>
           
           <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-text-main/5">
             <div>
               <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Estimated Duration</div>
-              <div className="text-lg font-mono text-text-main">{roadmap.careerPath.duration}</div>
+              <div className="text-lg font-mono text-text-main">{roadmap.careerPath?.duration}</div>
             </div>
             <div>
               <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Difficulty</div>
-              <div className="text-lg font-mono text-text-main">{roadmap.careerPath.difficulty}</div>
+              <div className="text-lg font-mono text-text-main">{roadmap.careerPath?.difficulty}</div>
             </div>
             <div>
               <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Owner Progress</div>
@@ -62,8 +62,8 @@ export default function ShareView() {
 
         {/* Timeline */}
         <div className="relative border-l border-text-main/10 ml-4 md:ml-8 pl-8 md:pl-12 space-y-12">
-          {roadmap.careerPath.roadmapSteps.map((step: any, index: number) => {
-            const completedTopicsInStep = step.topics.filter((t: string) => roadmap.completedTopics.includes(t));
+          {roadmap.careerPath?.roadmapSteps?.map((step: any, index: number) => {
+            const completedTopicsInStep = step.topics.filter((t: string) => (roadmap.completedTopics ?? []).includes(t));
             const isStepCompleted = completedTopicsInStep.length === step.topics.length && step.topics.length > 0;
             
             return (
@@ -104,7 +104,7 @@ export default function ShareView() {
                     <div className="mb-6 space-y-2">
                       <h4 className="text-sm font-semibold text-text-main mb-3">Topics</h4>
                       {step.topics.map((topic: string, tIndex: number) => {
-                        const isCompleted = roadmap.completedTopics.includes(topic);
+                        const isCompleted = (roadmap.completedTopics ?? []).includes(topic);
                         return (
                           <div 
                             key={tIndex}

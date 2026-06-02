@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Heart, MessageSquare, Share2, Award, Zap } from 'lucide-react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../convex/_generated/api';
 
 export default function Community() {
   const [newPost, setNewPost] = useState('');

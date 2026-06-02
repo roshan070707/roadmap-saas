@@ -300,7 +300,7 @@ export const toggleTopicCompletion = mutation({
     const careerPath = await ctx.db.get(roadmap.careerPathId);
     if (!careerPath) throw new Error("Career path not found");
 
-    let newCompletedTopics = [...roadmap.completedTopics];
+    let newCompletedTopics = [...(roadmap.completedTopics ?? [])];
     if (args.isCompleted && !newCompletedTopics.includes(args.topicName)) {
       newCompletedTopics.push(args.topicName);
     } else if (!args.isCompleted) {

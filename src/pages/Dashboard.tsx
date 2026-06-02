@@ -2,7 +2,7 @@ import { useQuery, useConvexAuth } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { motion } from 'framer-motion';
 import { Link, Navigate } from 'react-router-dom';
-import { Activity, Check, ChevronRight, Loader2, Clock, Flame, Target, Award } from 'lucide-react';
+import { Activity, Check, ChevronRight, Loader2, Clock, Flame, Target } from 'lucide-react';
 
 const Dashboard = () => {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
@@ -134,8 +134,8 @@ const Dashboard = () => {
                 </h3>
 
                 <div className="space-y-4">
-                  {activeRoadmap.careerPath.roadmapSteps.map((step: any, index: number) => {
-                    const isCompleted = step.topics && step.topics.length > 0 && step.topics.every((topic: string) => activeRoadmap.completedTopics.includes(topic));
+                  {activeRoadmap.careerPath?.roadmapSteps?.map((step: any, index: number) => {
+                    const isCompleted = step.topics && step.topics.length > 0 && step.topics.every((topic: string) => (activeRoadmap.completedTopics ?? []).includes(topic));
                     return (
                       <div 
                         key={index} 

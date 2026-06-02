@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Command } from 'cmdk';
-import { Search, Compass, Trophy, Users, BookOpen, Clock, Activity } from 'lucide-react';
+import { Search, Compass, Trophy, Users, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function CommandPalette() {

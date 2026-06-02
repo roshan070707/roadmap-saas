@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Square, Clock, X, Maximize2, Minimize2, SkipForward, Flame, Flag, GripHorizontal } from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';

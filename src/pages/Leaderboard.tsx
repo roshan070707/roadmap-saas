@@ -1,7 +1,5 @@
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Flame, Clock } from 'lucide-react';
-import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import { Medal, Flame, Clock } from 'lucide-react';
 
 export default function Leaderboard() {
   // In a real app, we'd fetch actual users. We'll use mock data to demonstrate the UI for now
