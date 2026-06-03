@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { incrementReputation } from "./collaboration";
 
 export async function checkAndUnlockAchievements(
   ctx: any,
@@ -82,6 +83,8 @@ export async function checkAndUnlockAchievements(
           description: `You unlocked: ${achievement.title}`,
           createdAt: Date.now()
         });
+
+        await incrementReputation(ctx, userId, 5);
       }
     }
   }

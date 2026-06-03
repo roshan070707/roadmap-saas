@@ -120,7 +120,7 @@ const Hero = () => {
           </div>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
                 <Users className="w-5 h-5 text-purple-400" />

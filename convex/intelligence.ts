@@ -97,7 +97,7 @@ export const generateSmartRoadmap = mutation({
           description: "A gentle introduction to the very basics.",
           duration: "2 Weeks",
           topics: ["Computer Basics", "Internet Fundamentals", "Command Line 101", "How Code Works"],
-          resources: [{ name: "Crash Course Computer Science", type: "Video" }]
+          resources: [{ name: "Crash Course Computer Science", type: "Video", url: "https://www.youtube.com/playlist?list=PL8dPuuaLjXtNlUrzyH5r6jN9ulIgZBpdo" }]
         });
         totalDurationMonths += 1;
       }

@@ -31,6 +31,7 @@ export default defineSchema({
     progress: v.number(),
     completedTopics: v.optional(v.array(v.string())),
     completedSteps: v.optional(v.array(v.string())),
+    completedResources: v.optional(v.array(v.string())),
     isPublic: v.optional(v.boolean()),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
@@ -76,6 +77,7 @@ export default defineSchema({
     content: v.string(),
     likes: v.number(),
     timestamp: v.number(),
+    updatedAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),
 
   invites: defineTable({
@@ -92,6 +94,7 @@ export default defineSchema({
     streak: v.number(),
     sessions: v.number(),
     lastUpdated: v.number(),
+    reputation: v.optional(v.number()),
   }).index("by_studyTime", ["studyTime"]).index("by_user", ["userId"]),
   friendRequests: defineTable({
     senderId: v.id("users"),
@@ -146,4 +149,82 @@ export default defineSchema({
     maxScore: v.number(),
     takenAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  userSettings: defineTable({
+    userId: v.id("users"),
+    plan: v.string(), // "FREE", "PRO", "TEAM"
+    timezone: v.string(),
+    theme: v.string(),
+    notifications: v.boolean(),
+  }).index("by_user", ["userId"]),
+
+  waitlist: defineTable({
+    featureName: v.string(),
+    userId: v.optional(v.id("users")),
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    createdAt: v.number(),
+  }),
+
+  teams: defineTable({
+    name: v.string(),
+    ownerId: v.id("users"),
+    createdAt: v.number(),
+  }),
+
+  teamMembers: defineTable({
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    role: v.string(), // "owner", "admin", "member"
+    joinedAt: v.number(),
+  }).index("by_teamId", ["teamId"]).index("by_userId", ["userId"]),
+
+  resourceClicks: defineTable({
+    userId: v.id("users"),
+    roadmapId: v.id("userRoadmaps"),
+    resourceUrl: v.string(),
+    clickedAt: v.number(),
+  }).index("by_user_roadmap", ["userId", "roadmapId"]),
+
+  postLikes: defineTable({
+    postId: v.id("communityPosts"),
+    userId: v.id("users"),
+  }).index("by_post", ["postId"]).index("by_user_post", ["userId", "postId"]),
+
+  postReplies: defineTable({
+    postId: v.id("communityPosts"),
+    userId: v.id("users"),
+    content: v.string(),
+    timestamp: v.number(),
+  }).index("by_post", ["postId"]),
+
+  profiles: defineTable({
+    userId: v.id("users"),
+    username: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    location: v.optional(v.string()),
+    github: v.optional(v.string()),
+    linkedin: v.optional(v.string()),
+    portfolioUrl: v.optional(v.string()),
+  }).index("by_user", ["userId"]).index("by_username", ["username"]),
+
+  projects: defineTable({
+    userId: v.id("users"),
+    roadmapId: v.optional(v.id("userRoadmaps")),
+    topicName: v.optional(v.string()),
+    title: v.string(),
+    description: v.string(),
+    githubUrl: v.optional(v.string()),
+    liveDemoUrl: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    imageUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  reportedPosts: defineTable({
+    postId: v.id("communityPosts"),
+    reporterId: v.id("users"),
+    reason: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("by_post", ["postId"]),
 });

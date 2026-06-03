@@ -3,30 +3,36 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowLeft, Loader2, PlayCircle, FileText, ExternalLink, Share2, Copy, ChevronDown, Briefcase, Zap, TrendingUp, Code2, FileCode, CheckCircle2, X } from 'lucide-react';
+import { Check, ArrowLeft, Loader2, PlayCircle, FileText, ExternalLink, Share2, Copy, ChevronDown, Briefcase, Zap, TrendingUp, Code2, FileCode, CheckCircle2, X, Download, Calendar, Target, Clock } from 'lucide-react';
 import type { Id } from '../../convex/_generated/dataModel';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-// Predefined deterministic insights mapped by career keyword
-const CAREER_INSIGHTS: Record<string, { salary: string; demand: string; skills: string[] }> = {
-  "Full Stack": { salary: "$100k - $160k", demand: "Very High", skills: ["System Design", "Databases", "APIs"] },
-  "Data Scientist": { salary: "$120k - $180k", demand: "High", skills: ["Machine Learning", "Statistics", "Python"] },
-  "Cyber Security": { salary: "$110k - $170k", demand: "Very High", skills: ["Cryptography", "Network Security", "Ethical Hacking"] },
-  "AI Engineer": { salary: "$140k - $220k", demand: "Extremely High", skills: ["Deep Learning", "NLP", "Neural Networks"] },
-  "NIMCET": { salary: "Top MCA Placements", demand: "Competitive", skills: ["Advanced Math", "Logical Reasoning", "Speed & Accuracy"] },
+// Indian Market Salaries and Insights
+const CAREER_INSIGHTS: Record<string, { entry: string; avg: string; senior: string; demand: string; skills: string[] }> = {
+  "Full Stack": { entry: "₹8 LPA", avg: "₹15 LPA", senior: "₹25 LPA", demand: "Very High", skills: ["System Design", "Databases", "APIs"] },
+  "Data Scientist": { entry: "₹8 LPA", avg: "₹14 LPA", senior: "₹25 LPA", demand: "High", skills: ["Machine Learning", "Statistics", "Python"] },
+  "Cyber Security": { entry: "₹10 LPA", avg: "₹18 LPA", senior: "₹30 LPA", demand: "Very High", skills: ["Cryptography", "Network Security", "Ethical Hacking"] },
+  "AI Engineer": { entry: "₹15 LPA", avg: "₹25 LPA", senior: "₹45 LPA", demand: "Extremely High", skills: ["Deep Learning", "NLP", "Neural Networks"] },
+  "NIMCET": { entry: "₹6 LPA", avg: "₹12 LPA", senior: "₹20 LPA", demand: "Competitive", skills: ["Advanced Math", "Logical Reasoning", "Speed & Accuracy"] },
 };
 
 function getInsights(title: string) {
   for (const [key, value] of Object.entries(CAREER_INSIGHTS)) {
     if (title.includes(key)) return value;
   }
-  return { salary: "Varies by region", demand: "Growing", skills: ["Problem Solving", "Core Fundamentals", "Adaptability"] };
+  return { entry: "₹5 LPA", avg: "₹10 LPA", senior: "₹18 LPA", demand: "Growing", skills: ["Problem Solving", "Core Fundamentals", "Adaptability"] };
 }
 
 export default function RoadmapView() {
   const { id } = useParams();
   const roadmap = useQuery(api.roadmaps.getRoadmapById, { id: id as Id<"userRoadmaps"> });
+  const user = useQuery(api.users.current);
+  const studyStats = useQuery(api.study.getStats);
   const togglePublic = useMutation(api.roadmaps.togglePublicStatus);
   const verifyTopic = useMutation(api.roadmaps.verifyTopicCompletion);
+  const clickResource = useMutation(api.roadmaps.clickResource);
+  const toggleResourceCompletion = useMutation(api.roadmaps.toggleResourceCompletion);
+  
   const [isCopied, setIsCopied] = useState(false);
   
   // Verification Modal State
@@ -51,7 +57,6 @@ export default function RoadmapView() {
       if (firstIncomplete !== -1) {
         setExpandedSteps(prev => ({ ...prev, [firstIncomplete]: true }));
       } else {
-        // If all complete, expand first
         setExpandedSteps(prev => ({ ...prev, 0: true }));
       }
     }
@@ -69,19 +74,11 @@ export default function RoadmapView() {
     );
   }
 
-  if (roadmap === null) {
+  if (roadmap === null || !roadmap.careerPath) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-luxury-bg pt-20">
         <h2 className="text-2xl font-bold text-text-main mb-4">Roadmap Not Found</h2>
         <Link to="/dashboard" className="text-luxury-purple hover:underline">Return to Dashboard</Link>
-      </div>
-    );
-  }
-
-  if (!roadmap.careerPath) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-luxury-bg">
-        <h2 className="text-2xl font-bold text-text-main">Career Path Data Missing</h2>
       </div>
     );
   }
@@ -110,6 +107,17 @@ export default function RoadmapView() {
     }
   };
 
+  const handleResourceClick = async (url: string) => {
+    if (roadmap.isOwner && url) {
+      await clickResource({ roadmapId: roadmap._id, resourceUrl: url });
+    }
+  };
+
+  const handleToggleResource = async (url: string, currentStatus: boolean) => {
+    if (!roadmap.isOwner) return;
+    await toggleResourceCompletion({ roadmapId: roadmap._id, resourceUrl: url, isCompleted: !currentStatus });
+  };
+
   const handleShare = async () => {
     if (!roadmap.isPublic) {
       await togglePublic({ roadmapId: roadmap._id, isPublic: true });
@@ -118,6 +126,200 @@ export default function RoadmapView() {
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
+
+  const handleExportPDF = async () => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+      const { width, height } = page.getSize();
+      
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      let yPos = height - 50;
+
+      // Title
+      page.drawText(`${roadmap.careerPath!.title} Roadmap`, {
+        x: 50,
+        y: yPos,
+        size: 24,
+        font: boldFont,
+        color: rgb(0.1, 0.1, 0.1),
+      });
+      
+      yPos -= 25;
+      
+      page.drawText(`Prepared for: ${user?.name || 'Learner'}`, {
+        x: 50,
+        y: yPos,
+        size: 14,
+        font: boldFont,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+
+      yPos -= 25;
+      
+      page.drawText(`Generated on ${new Date().toLocaleDateString()}`, {
+        x: 50,
+        y: yPos,
+        size: 12,
+        font,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+
+      yPos -= 40;
+      
+      // Summary Section
+      page.drawText('Progress Summary', {
+        x: 50,
+        y: yPos,
+        size: 16,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      yPos -= 25;
+      
+      page.drawText(`Completion: ${roadmap.progress}%`, {
+        x: 50,
+        y: yPos,
+        size: 12,
+        font,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      
+      let totalTopics = 0;
+      roadmap.careerPath!.roadmapSteps.forEach((s: any) => totalTopics += (s.topics?.length || 0));
+      const completedTopicsCount = roadmap.completedTopics?.length || 0;
+      
+      page.drawText(`Topics Mastered: ${completedTopicsCount} / ${totalTopics}`, {
+        x: 300,
+        y: yPos,
+        size: 12,
+        font,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      
+      yPos -= 40;
+      
+      // Iterating over phases
+      let currentPage = page;
+      for (let i = 0; i < roadmap.careerPath!.roadmapSteps.length; i++) {
+        const step = roadmap.careerPath!.roadmapSteps[i];
+        
+        if (yPos < 100) {
+          currentPage = pdfDoc.addPage([595.28, 841.89]);
+          yPos = height - 50;
+        }
+
+        currentPage.drawText(`Phase ${i + 1}: ${step.title}`, {
+          x: 50,
+          y: yPos,
+          size: 14,
+          font: boldFont,
+          color: rgb(0.1, 0.1, 0.1),
+        });
+        
+        yPos -= 20;
+
+        // Wrap text for description
+        const words = step.description.split(' ');
+        let line = '';
+        const maxWidth = width - 100;
+        
+        for (let j = 0; j < words.length; j++) {
+          const testLine = line + words[j] + ' ';
+          const testWidth = font.widthOfTextAtSize(testLine, 10);
+          if (testWidth > maxWidth && j > 0) {
+            currentPage.drawText(line, { x: 50, y: yPos, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
+            line = words[j] + ' ';
+            yPos -= 15;
+          } else {
+            line = testLine;
+          }
+        }
+        currentPage.drawText(line, { x: 50, y: yPos, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
+        yPos -= 25;
+
+        if (step.topics && step.topics.length > 0) {
+          step.topics.forEach((topic: string) => {
+            if (yPos < 50) {
+              currentPage = pdfDoc.addPage([595.28, 841.89]);
+              yPos = height - 50;
+            }
+            const isCompleted = (roadmap.completedTopics || []).includes(topic);
+            const color = isCompleted ? rgb(0, 0.5, 0) : rgb(0.4, 0.4, 0.4);
+            currentPage.drawText(`${isCompleted ? '[X]' : '[ ]'} ${topic}`, {
+              x: 60,
+              y: yPos,
+              size: 10,
+              font,
+              color,
+            });
+            yPos -= 15;
+          });
+          yPos -= 10;
+        }
+
+        if (step.resources && step.resources.length > 0) {
+          currentPage.drawText(`Resources:`, {
+            x: 60,
+            y: yPos,
+            size: 10,
+            font: boldFont,
+            color: rgb(0.2, 0.2, 0.2),
+          });
+          yPos -= 15;
+
+          step.resources.forEach((res: any) => {
+            if (yPos < 50) {
+              currentPage = pdfDoc.addPage([595.28, 841.89]);
+              yPos = height - 50;
+            }
+            const resText = `- ${res.name} (${res.type})`;
+            currentPage.drawText(resText, {
+              x: 70,
+              y: yPos,
+              size: 9,
+              font,
+              color: rgb(0.4, 0.4, 0.4),
+            });
+            yPos -= 12;
+          });
+          yPos -= 10;
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const filename = roadmap.careerPath?.title ? `${roadmap.careerPath.title.replace(/\s+/g, '_')}_Roadmap.pdf` : 'Roadmap.pdf';
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+
+  const insights = getInsights(roadmap.careerPath.title);
+
+  // Header stats calculations
+  let totalTopics = 0;
+  roadmap.careerPath.roadmapSteps.forEach((step: any) => {
+    totalTopics += step.topics ? step.topics.length : 0;
+  });
+  const completedTopics = roadmap.completedTopics?.length || 0;
+  const remainingTopics = totalTopics - completedTopics;
+
+  // Estimated completion date mockup (e.g. 2 days per remaining topic)
+  const estDate = new Date();
+  estDate.setDate(estDate.getDate() + (remainingTopics * 2));
 
   return (
     <div className="min-h-screen bg-luxury-bg pt-32 pb-20 px-6 overflow-hidden">
@@ -129,14 +331,21 @@ export default function RoadmapView() {
 
         {/* Header */}
         <div className="mb-16 relative">
-          <div className="absolute top-0 right-0">
+          <div className="absolute top-0 right-0 flex gap-3 z-20">
+            <button 
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-text-main/5 hover:bg-text-main/10 rounded-full text-sm font-semibold text-text-main transition-colors border border-text-main/10 hover:border-text-main/20 shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden md:inline">Export PDF</span>
+            </button>
             {roadmap.isOwner && (
               <button 
                 onClick={handleShare}
                 className="flex items-center gap-2 px-4 py-2 bg-text-main/5 hover:bg-text-main/10 rounded-full text-sm font-semibold text-text-main transition-colors border border-text-main/10 hover:border-text-main/20 shadow-sm"
               >
                 {isCopied ? <Copy className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
-                {isCopied ? 'Link Copied!' : (roadmap.isPublic ? 'Share Link' : 'Make Public & Share')}
+                <span className="hidden md:inline">{isCopied ? 'Copied!' : (roadmap.isPublic ? 'Share' : 'Make Public')}</span>
               </button>
             )}
           </div>
@@ -146,78 +355,72 @@ export default function RoadmapView() {
           <h1 className="text-4xl md:text-5xl font-bold text-text-main mb-6 tracking-tight">
             {roadmap.careerPath.title}
           </h1>
-          <p className="text-xl text-text-muted font-light leading-relaxed max-w-2xl">
+          <p className="text-xl text-text-muted font-light leading-relaxed max-w-2xl mb-12">
             {roadmap.careerPath.description}
           </p>
           
-          <div className="flex flex-wrap gap-8 mt-8 pt-8 border-t border-text-main/5">
-            <div>
-              <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Estimated Duration</div>
-              <div className="text-lg font-mono text-text-main">{roadmap.careerPath.duration}</div>
+          {/* Professional Cleaned up Grid Stats instead of Progress Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="glass-card p-4 border border-text-main/10">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Completed Topics</div>
+              <div className="text-2xl font-mono text-text-main font-bold">{completedTopics}</div>
             </div>
-            <div>
-              <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Difficulty</div>
-              <div className="text-lg font-mono text-text-main">{roadmap.careerPath.difficulty}</div>
+            <div className="glass-card p-4 border border-text-main/10">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-luxury-purple" /> Remaining Topics</div>
+              <div className="text-2xl font-mono text-text-main font-bold">{remainingTopics}</div>
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <div className="flex justify-between items-end mb-2">
-                <div className="text-xs text-text-muted uppercase tracking-wider">Current Progress</div>
-                <div className="text-lg font-mono text-luxury-purple font-bold">{roadmap.progress}%</div>
-              </div>
-              <div className="h-2 w-full bg-text-main/5 rounded-full overflow-hidden shadow-inner">
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-luxury-purple to-luxury-gold"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${roadmap.progress}%` }}
-                  transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }} // smooth spring-like easing
-                />
-              </div>
+            <div className="glass-card p-4 border border-text-main/10">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2"><Zap className="w-4 h-4 text-luxury-gold" /> Current Streak</div>
+              <div className="text-2xl font-mono text-text-main font-bold">{studyStats?.streak || 0} <span className="text-sm font-normal text-text-muted">Days</span></div>
+            </div>
+            <div className="glass-card p-4 border border-text-main/10">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /> Study Hours</div>
+              <div className="text-2xl font-mono text-text-main font-bold">{Math.round((studyStats?.totalTime || 0) / 60)}<span className="text-sm font-normal text-text-muted">h</span></div>
+            </div>
+            <div className="glass-card p-4 border border-text-main/10 col-span-2 md:col-span-1">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2"><Calendar className="w-4 h-4 text-luxury-purple" /> Est. Completion</div>
+              <div className="text-xl font-mono text-text-main font-semibold leading-tight">{estDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric'})}</div>
             </div>
           </div>
         </div>
 
-        {/* Career Insights Panel */}
+        {/* Career Insights Panel - Indian Market Salaries */}
         <div className="mb-16 grid md:grid-cols-3 gap-4">
-          {(() => {
-            const insights = getInsights(roadmap.careerPath.title);
-            return (
-              <>
-                <div className="glass-card p-6 bg-gradient-to-br from-luxury-purple/10 to-transparent border-luxury-purple/20">
-                  <div className="text-luxury-purple text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Market Demand</div>
-                  <div className="text-xl font-bold text-text-main">{insights.demand}</div>
-                </div>
-                <div className="glass-card p-6 bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
-                  <div className="text-green-400 text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Avg. Compensation</div>
-                  <div className="text-xl font-bold text-text-main">{insights.salary}</div>
-                </div>
-                <div className="glass-card p-6 bg-gradient-to-br from-luxury-gold/10 to-transparent border-luxury-gold/20">
-                  <div className="text-luxury-gold text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><Zap className="w-4 h-4" /> Key Skills Gained</div>
-                  <div className="flex flex-wrap gap-2">
-                    {insights.skills.map((s, i) => (
-                      <span key={i} className="text-xs font-semibold px-2 py-1 bg-white/5 border border-white/10 rounded text-text-main">{s}</span>
-                    ))}
-                  </div>
-                </div>
-              </>
-            );
-          })()}
+          <div className="glass-card p-6 bg-gradient-to-br from-luxury-purple/10 to-transparent border-luxury-purple/20">
+            <div className="text-luxury-purple text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Market Demand</div>
+            <div className="text-xl font-bold text-text-main mb-1">{insights.demand}</div>
+            <div className="text-xs text-text-muted">High growth sector in India</div>
+          </div>
+          <div className="glass-card p-6 bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+            <div className="text-green-400 text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Salary Expectations (INR)</div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm"><span className="text-text-muted">Entry:</span> <span className="font-mono text-text-main font-semibold">{insights.entry}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-text-muted">Average:</span> <span className="font-mono text-green-400 font-bold">{insights.avg}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-text-muted">Senior:</span> <span className="font-mono text-text-main font-semibold">{insights.senior}</span></div>
+            </div>
+          </div>
+          <div className="glass-card p-6 bg-gradient-to-br from-luxury-gold/10 to-transparent border-luxury-gold/20">
+            <div className="text-luxury-gold text-xs uppercase tracking-wider mb-3 flex items-center gap-2"><Zap className="w-4 h-4" /> Key Skills Gained</div>
+            <div className="flex flex-wrap gap-2">
+              {insights.skills.map((s, i) => (
+                <span key={i} className="text-xs font-semibold px-2 py-1 bg-white/5 border border-white/10 rounded text-text-main">{s}</span>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Skill Tree Network Visualization */}
         <div className="relative mt-20 max-w-2xl mx-auto py-12">
           
-          {/* SVG connecting lines for the Skill Tree */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
             {roadmap.careerPath!.roadmapSteps?.map((_: any, index: number) => {
               if (index === roadmap.careerPath!.roadmapSteps.length - 1) return null;
               
               const isEven = index % 2 === 0;
-              // X positions: 20% or 80% (zigzag)
               const x1 = isEven ? '30%' : '70%';
               const x2 = isEven ? '70%' : '30%';
               
-              // Y positions based on height (approximate spacing)
-              const nodeHeight = 220; // roughly 220px per node vertically
+              const nodeHeight = 220; 
               const y1 = index * nodeHeight + 80;
               const y2 = (index + 1) * nodeHeight + 80;
 
@@ -256,7 +459,7 @@ export default function RoadmapView() {
                   } overflow-hidden`}
                 >
                   
-                  {/* Step Header (Always Visible) */}
+                  {/* Step Header */}
                   <div 
                     className="p-6 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer relative overflow-hidden"
                     onClick={() => toggleStep(index)}
@@ -285,11 +488,6 @@ export default function RoadmapView() {
                       <h3 className={`text-xl font-bold tracking-tight transition-colors ${isStepCompleted ? 'text-text-main line-through decoration-text-main/30' : 'text-text-main'}`}>
                         {step.title}
                       </h3>
-                      {!isExpanded && (
-                        <p className="text-text-muted font-light mt-2 line-clamp-1 text-sm">
-                          {step.description}
-                        </p>
-                      )}
                     </div>
 
                     <div className={`shrink-0 ml-auto transition-transform duration-500 ease-[0.16,1,0.3,1] ${isExpanded ? 'rotate-180' : ''}`}>
@@ -349,29 +547,65 @@ export default function RoadmapView() {
                           </div>
                         )}
 
-                        {/* Resources */}
+                        {/* Real Resources System */}
                         {step.resources && step.resources.length > 0 && (
                           <div className="pt-6 border-t border-text-main/5">
                             <h4 className="text-xs font-semibold text-text-main uppercase tracking-widest mb-4 flex items-center gap-3">
-                              <span className="w-6 h-[1px] bg-luxury-gold"></span> Curated Resources
+                              <span className="w-6 h-[1px] bg-luxury-gold"></span> Study Resources
                             </h4>
                             <div className="grid grid-cols-1 gap-3">
-                              {step.resources.map((resource: any, rIndex: number) => (
-                                <a 
-                                  key={rIndex}
-                                  href={resource.url || "#"}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="group flex items-center gap-4 p-3 rounded-lg border border-transparent hover:border-text-main/10 bg-text-main/5 hover:bg-text-main/10 transition-all"
-                                >
-                                  <div className="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-text-main group-hover:text-luxury-gold transition-colors shadow-sm">
-                                    {resource.type === 'Video' ? <PlayCircle className="w-4 h-4" /> : 
-                                     resource.type === 'Documentation' || resource.type === 'Doc' ? <FileText className="w-4 h-4" /> : 
-                                     <ExternalLink className="w-4 h-4" />}
+                              {step.resources.map((resource: any, rIndex: number) => {
+                                const resourceIdentifier = resource.url || resource.name;
+                                const isResourceCompleted = (roadmap.completedResources ?? []).includes(resourceIdentifier);
+                                return (
+                                  <div key={rIndex} className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${isResourceCompleted ? 'border-luxury-gold/30 bg-luxury-gold/5' : 'border-text-main/10 bg-text-main/5 hover:bg-text-main/10 hover:border-luxury-gold/20'}`}>
+                                    {(() => {
+                                      let isValidUrl = false;
+                                      if (resource.url) {
+                                        try { new URL(resource.url); isValidUrl = true; } catch { isValidUrl = false; }
+                                      }
+                                      return isValidUrl ? (
+                                        <a 
+                                          href={resource.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={() => handleResourceClick(resource.url)}
+                                          className="flex-1 flex items-center gap-4 group"
+                                        >
+                                          <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors shadow-sm ${isResourceCompleted ? 'bg-luxury-gold/20 border-luxury-gold/50 text-luxury-gold' : 'bg-white/5 border-white/5 text-text-main group-hover:text-luxury-gold'}`}>
+                                            {resource.type === 'Video' || resource.type === 'YouTube' ? <PlayCircle className="w-4 h-4" /> : 
+                                            resource.type === 'Documentation' || resource.type === 'Doc' || resource.type === 'Article' ? <FileText className="w-4 h-4" /> : 
+                                            <ExternalLink className="w-4 h-4" />}
+                                          </div>
+                                          <div>
+                                            <span className={`text-sm font-semibold line-clamp-1 transition-colors ${isResourceCompleted ? 'text-luxury-gold' : 'text-text-main group-hover:text-luxury-gold'}`}>{resource.name}</span>
+                                            <span className="text-xs text-text-muted">{resource.type}</span>
+                                          </div>
+                                        </a>
+                                      ) : (
+                                        <div className="flex-1 flex items-center gap-4 group opacity-50 cursor-not-allowed">
+                                          <div className="w-8 h-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-text-muted shadow-sm">
+                                            <X className="w-4 h-4" />
+                                          </div>
+                                          <div>
+                                            <span className="text-sm font-semibold line-clamp-1 text-text-muted">{resource.name}</span>
+                                            <span className="text-xs text-red-400">Resource unavailable</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
+                                    {roadmap.isOwner && (
+                                      <button 
+                                        onClick={() => handleToggleResource(resourceIdentifier, isResourceCompleted)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-full border transition-all shadow-sm shrink-0 ${isResourceCompleted ? 'bg-luxury-gold border-luxury-gold text-white shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'border-text-muted/30 text-text-muted hover:border-luxury-gold hover:text-luxury-gold'}`}
+                                        title={isResourceCompleted ? "Mark incomplete" : "Mark complete"}
+                                      >
+                                        <Check className="w-4 h-4" />
+                                      </button>
+                                    )}
                                   </div>
-                                  <span className="text-sm font-semibold text-text-main line-clamp-1">{resource.name}</span>
-                                </a>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -435,7 +669,7 @@ export default function RoadmapView() {
               </div>
 
               <div className="mb-8">
-                <label className="block text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">
+                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                   {submissionType === 'github' ? 'Repository URL' : 'Key Takeaways'}
                 </label>
                 {submissionType === 'github' ? (

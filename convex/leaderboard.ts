@@ -87,6 +87,8 @@ export const getGlobalLeaderboard = query({
       sorted = allStats.sort((a, b) => b.streak - a.streak);
     } else if (args.metric === "roadmapCompletion") {
       sorted = allStats.sort((a, b) => b.roadmapCompletion - a.roadmapCompletion);
+    } else if (args.metric === "reputation") {
+      sorted = allStats.sort((a, b) => (b.reputation || 0) - (a.reputation || 0));
     } else {
       sorted = allStats.sort((a, b) => b.studyTime - a.studyTime);
     }
@@ -124,6 +126,8 @@ export const getFriendsLeaderboard = query({
       sorted = friendsStats.sort((a, b) => b.streak - a.streak);
     } else if (args.metric === "roadmapCompletion") {
       sorted = friendsStats.sort((a, b) => b.roadmapCompletion - a.roadmapCompletion);
+    } else if (args.metric === "reputation") {
+      sorted = friendsStats.sort((a, b) => (b.reputation || 0) - (a.reputation || 0));
     } else {
       sorted = friendsStats.sort((a, b) => b.studyTime - a.studyTime);
     }

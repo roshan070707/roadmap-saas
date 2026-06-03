@@ -70,34 +70,46 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <div className="glass-card p-4">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-luxury-purple"/> Daily Study</div>
-            <div className="text-2xl font-bold text-text-main">{studyStats?.dailyTime || 0} <span className="text-sm font-normal text-text-muted">min</span></div>
-          </div>
-          <div className="glass-card p-4">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-luxury-purple"/> Weekly Study</div>
-            <div className="text-2xl font-bold text-text-main">{studyStats?.weeklyTime || 0} <span className="text-sm font-normal text-text-muted">min</span></div>
-          </div>
-          <div className="glass-card p-4">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Flame className="w-4 h-4 text-luxury-gold"/> Current Streak</div>
-            <div className="text-2xl font-bold text-text-main">{studyStats?.streak || 0} <span className="text-sm font-normal text-text-muted">Days</span></div>
-          </div>
-          <div className="glass-card p-4">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-green-500"/> Total Sessions</div>
-            <div className="text-2xl font-bold text-text-main">{studyStats?.sessionsCount || 0}</div>
-          </div>
-          <div className="glass-card p-4 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-luxury-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-luxury-purple" /> Health Score
+        {(!studyStats || studyStats.sessionsCount === 0) ? (
+          <div className="glass-card p-8 mb-8 text-center flex flex-col items-center justify-center border-luxury-purple/20 bg-luxury-purple/5">
+            <div className="w-12 h-12 rounded-full bg-luxury-purple/10 flex items-center justify-center mb-4">
+              <Clock className="w-6 h-6 text-luxury-purple" />
             </div>
-            <div className="text-2xl font-bold text-text-main flex items-end gap-1">
-              {intelligence?.healthScore ?? 0}
-              <span className="text-xs text-text-muted font-normal mb-1">/100</span>
+            <h3 className="text-xl font-bold text-text-main mb-2">Start your first study session</h3>
+            <p className="text-sm text-text-muted max-w-md">
+              Your analytics, streaks, and health score will appear here once you begin learning.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div className="glass-card p-4">
+              <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-luxury-purple"/> Daily Study</div>
+              <div className="text-2xl font-bold text-text-main">{studyStats?.dailyTime || 0} <span className="text-sm font-normal text-text-muted">min</span></div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-luxury-purple"/> Weekly Study</div>
+              <div className="text-2xl font-bold text-text-main">{studyStats?.weeklyTime || 0} <span className="text-sm font-normal text-text-muted">min</span></div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Flame className="w-4 h-4 text-luxury-gold"/> Current Streak</div>
+              <div className="text-2xl font-bold text-text-main">{studyStats?.streak || 0} <span className="text-sm font-normal text-text-muted">Days</span></div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-green-500"/> Total Sessions</div>
+              <div className="text-2xl font-bold text-text-main">{studyStats?.sessionsCount || 0}</div>
+            </div>
+            <div className="glass-card p-4 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-luxury-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="text-text-muted text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-luxury-purple" /> Health Score
+              </div>
+              <div className="text-2xl font-bold text-text-main flex items-end gap-1">
+                {intelligence?.healthScore ?? 0}
+                <span className="text-xs text-text-muted font-normal mb-1">/100</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Social Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -120,7 +132,9 @@ const Dashboard = () => {
           <div className="glass-card p-4 bg-luxury-gold/5 border-luxury-gold/20">
             <div className="text-luxury-gold text-[10px] uppercase tracking-wider mb-2">Global Rank</div>
             <div className="text-xl font-bold text-luxury-gold">
-              {globalLeaderboard ? (
+              {(!studyStats || studyStats.sessionsCount === 0) ? (
+                <span className="text-xs font-normal text-text-muted leading-tight block mt-1">Start studying to join</span>
+              ) : globalLeaderboard ? (
                 (() => {
                   const rank = globalLeaderboard.findIndex((s: any) => s.userId === user?._id);
                   return rank !== -1 ? `#${rank + 1}` : 'Unranked';

@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# ROADMAP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**The deterministic engine for career acceleration. Stop guessing. Start executing.**
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+ROADMAP is a professional SaaS platform designed to guide developers, engineers, and tech enthusiasts along structured, AI-generated career paths. By leveraging the `@convex-dev/auth` for secure access and a highly scalable serverless backend via Convex, ROADMAP provides users with deterministic learning steps, community integrations, study analytics, and team collaboration features.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **AI-Powered Roadmaps:** Generate custom skill trees for any tech role (e.g., Full Stack, AI Engineer).
+- **Study Dashboard & Analytics:** Track study hours, streaks, and learning health scores.
+- **Interactive Verification:** Prove your learning through GitHub repositories and study notes.
+- **Team Workspaces (Pro/Team):** Collaborate with peers, track shared goals, and manage members.
+- **PDF Exports:** Export your roadmaps to share with mentors and recruiters.
+- **Premium Tiers:** Free, Pro, and Team tiers unlocking advanced features.
+- **Command Palette:** Quick navigation and actions anywhere in the platform (`Ctrl + K`).
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend:** React, TypeScript, Tailwind CSS, Vite, Framer Motion
+- **Routing:** React Router DOM v7
+- **Backend & Database:** Convex (Serverless, Real-time)
+- **Authentication:** Convex Auth (Email, GitHub, Google OAuth)
+- **Icons:** Lucide React
+- **Exporting:** jsPDF, html2canvas
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Architecture
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Client Layer:** A responsive, dark-theme optimized UI built with `glass-card` aesthetics.
+2. **Business Layer:** Manages subscriptions, waitlists, team invites, and user settings via specialized Convex tables.
+3. **Data Layer:** Real-time synchronization for study sessions, roadmap progress, and community interactions.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/roshan070707/roadmap-saas.git
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To deploy the frontend to Vercel/Netlify and the backend to Convex Production:
+```bash
+npx convex deploy
+npm run build
 ```
+
+## Screenshots
+*(Add screenshots here)*
+
+## Future Plans
+
+- Full AI Mentor integration for real-time code reviews.
+- Resume Analyzer & Interview Simulator.
+- Complete Light Theme.
+- B2B Team Leaderboards.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**Built by Roshan Manjani**
+- [GitHub](https://github.com/roshan070707)
+- [LinkedIn](https://linkedin.com/in/roshanmanjani)

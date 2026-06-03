@@ -141,6 +141,30 @@ export const getRoadmapMembers = query({
   }
 });
 
+export async function incrementReputation(ctx: any, userId: any, amount: number) {
+  const stats = await ctx.db
+    .query("leaderboardStats")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .first();
+  
+  if (stats) {
+    await ctx.db.patch(stats._id, {
+      reputation: (stats.reputation || 0) + amount
+    });
+  } else {
+    // Initialize if doesn't exist
+    await ctx.db.insert("leaderboardStats", {
+      userId,
+      studyTime: 0,
+      roadmapCompletion: 0,
+      streak: 0,
+      sessions: 0,
+      lastUpdated: Date.now(),
+      reputation: amount > 0 ? amount : 0,
+    });
+  }
+}
+
 export const createCommunityPost = mutation({
   args: { content: v.string() },
   handler: async (ctx, args) => {
@@ -153,12 +177,122 @@ export const createCommunityPost = mutation({
       likes: 0,
       timestamp: Date.now()
     });
+
+    await incrementReputation(ctx, userId, 2); // +2 for post created
+  }
+});
+
+export const editCommunityPost = mutation({
+  args: { postId: v.id("communityPosts"), content: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const post = await ctx.db.get(args.postId);
+    if (!post || post.userId !== userId) throw new Error("Unauthorized");
+
+    await ctx.db.patch(args.postId, {
+      content: args.content,
+      updatedAt: Date.now()
+    });
+  }
+});
+
+export const deleteCommunityPost = mutation({
+  args: { postId: v.id("communityPosts") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const post = await ctx.db.get(args.postId);
+    if (!post || post.userId !== userId) throw new Error("Unauthorized");
+
+    // Clean up likes and replies
+    const likes = await ctx.db.query("postLikes").withIndex("by_post", q => q.eq("postId", args.postId)).collect();
+    for (const like of likes) await ctx.db.delete(like._id);
+
+    const replies = await ctx.db.query("postReplies").withIndex("by_post", q => q.eq("postId", args.postId)).collect();
+    for (const reply of replies) await ctx.db.delete(reply._id);
+
+    await ctx.db.delete(args.postId);
+  }
+});
+
+export const likePost = mutation({
+  args: { postId: v.id("communityPosts") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const existing = await ctx.db
+      .query("postLikes")
+      .withIndex("by_user_post", q => q.eq("userId", userId).eq("postId", args.postId))
+      .first();
+
+    if (existing) return; // Already liked
+
+    await ctx.db.insert("postLikes", {
+      postId: args.postId,
+      userId
+    });
+
+    const post = await ctx.db.get(args.postId);
+    if (post) {
+      await ctx.db.patch(args.postId, { likes: post.likes + 1 });
+      if (post.userId !== userId) {
+        await incrementReputation(ctx, post.userId, 1); // +1 for like received
+      }
+    }
+  }
+});
+
+export const unlikePost = mutation({
+  args: { postId: v.id("communityPosts") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const existing = await ctx.db
+      .query("postLikes")
+      .withIndex("by_user_post", q => q.eq("userId", userId).eq("postId", args.postId))
+      .first();
+
+    if (!existing) return;
+
+    await ctx.db.delete(existing._id);
+
+    const post = await ctx.db.get(args.postId);
+    if (post) {
+      await ctx.db.patch(args.postId, { likes: Math.max(0, post.likes - 1) });
+      if (post.userId !== userId) {
+        await incrementReputation(ctx, post.userId, -1);
+      }
+    }
+  }
+});
+
+export const replyToPost = mutation({
+  args: { postId: v.id("communityPosts"), content: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    await ctx.db.insert("postReplies", {
+      postId: args.postId,
+      userId,
+      content: args.content,
+      timestamp: Date.now()
+    });
+
+    await incrementReputation(ctx, userId, 1); // +1 for reply
   }
 });
 
 export const getCommunityPosts = query({
   args: {},
   handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    
     const posts = await ctx.db
       .query("communityPosts")
       .order("desc")
@@ -167,13 +301,66 @@ export const getCommunityPosts = query({
     return await Promise.all(
       posts.map(async (post) => {
         const user = await ctx.db.get(post.userId);
+        
+        let hasLiked = false;
+        if (currentUserId) {
+          const like = await ctx.db
+            .query("postLikes")
+            .withIndex("by_user_post", q => q.eq("userId", currentUserId).eq("postId", post._id))
+            .first();
+          hasLiked = !!like;
+        }
+
+        const rawReplies = await ctx.db
+          .query("postReplies")
+          .withIndex("by_post", q => q.eq("postId", post._id))
+          .collect();
+
+        const replies = await Promise.all(
+          rawReplies.map(async (reply) => {
+            const replyUser = await ctx.db.get(reply.userId);
+            return {
+              ...reply,
+              user: replyUser?.name || "Unknown",
+              avatar: replyUser?.name?.charAt(0) || "U"
+            };
+          })
+        );
+
         return {
           ...post,
           user: user?.name || "Unknown User",
           avatar: user?.name?.charAt(0) || "U",
           role: "Learner",
+          hasLiked,
+          replies,
+          isOwner: currentUserId === post.userId,
+          ownerId: post.userId
         };
       })
     );
+  }
+});
+
+export const reportPost = mutation({
+  args: { postId: v.id("communityPosts"), reason: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const existingReport = await ctx.db
+      .query("reportedPosts")
+      .withIndex("by_post", q => q.eq("postId", args.postId))
+      .filter(q => q.eq(q.field("reporterId"), userId))
+      .first();
+
+    if (existingReport) return; // Already reported
+
+    await ctx.db.insert("reportedPosts", {
+      postId: args.postId,
+      reporterId: userId,
+      reason: args.reason,
+      timestamp: Date.now()
+    });
   }
 });

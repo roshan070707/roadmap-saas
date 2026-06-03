@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkAndUnlockAchievements } from "./achievements";
 import { syncLeaderboardStats } from "./leaderboard";
+import { incrementReputation } from "./collaboration";
 
 // --- Career Paths ---
 
@@ -136,7 +137,8 @@ export const clearAndSeed = mutation({
             duration: "8 Weeks",
             topics: ["Reconnaissance", "Scanning", "Exploitation", "Web App Hacking"],
             resources: [
-              { name: "HackTheBox Academy", type: "Platform", url: "https://academy.hackthebox.com/" }
+              { name: "HackTheBox Academy", type: "Platform", url: "https://academy.hackthebox.com/" },
+              { name: "OWASP Top 10", type: "Documentation", url: "https://owasp.org/www-project-top-ten/" }
             ]
           }
         ]
@@ -195,7 +197,7 @@ export const clearAndSeed = mutation({
           description: `Core concepts for ${title}`,
           duration: "4 Weeks",
           topics: ["Basics", "Tools", "Best Practices"],
-          resources: [{ name: "YouTube", type: "Video" }]
+          resources: [{ name: "Crash Course Computer Science", type: "Video", url: "https://www.youtube.com/playlist?list=PL8dPuuaLjXtNlUrzyH5r6jN9ulIgZBpdo" }]
         }
       ]
     }));
@@ -366,6 +368,17 @@ export const toggleTopicCompletion = mutation({
       });
       await checkAndUnlockAchievements(ctx, userId);
       await syncLeaderboardStats(ctx, userId);
+
+      if (progress === 100 && (roadmap.progress ?? 0) < 100) {
+        await incrementReputation(ctx, userId, 25);
+        await ctx.db.insert("activities", {
+          userId,
+          type: "Roadmap Completed",
+          title: "Roadmap Completed!",
+          description: `You finished 100% of ${careerPath.title}`,
+          createdAt: Date.now()
+        });
+      }
     }
 
     return { progress, newCompletedTopics };
@@ -429,6 +442,17 @@ export const verifyTopicCompletion = mutation({
     await checkAndUnlockAchievements(ctx, userId);
     await syncLeaderboardStats(ctx, userId);
 
+    if (progress === 100 && (roadmap.progress ?? 0) < 100) {
+      await incrementReputation(ctx, userId, 25);
+      await ctx.db.insert("activities", {
+        userId,
+        type: "Roadmap Completed",
+        title: "Roadmap Completed!",
+        description: `You finished 100% of ${careerPath.title}`,
+        createdAt: Date.now()
+      });
+    }
+
     return { progress, newCompletedTopics };
   }
 });
@@ -482,5 +506,43 @@ export const createCustomRoadmap = mutation({
     });
 
     return roadmapId;
+  }
+});
+
+export const clickResource = mutation({
+  args: { roadmapId: v.id("userRoadmaps"), resourceUrl: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+    await ctx.db.insert("resourceClicks", {
+      userId,
+      roadmapId: args.roadmapId,
+      resourceUrl: args.resourceUrl,
+      clickedAt: Date.now()
+    });
+  }
+});
+
+export const toggleResourceCompletion = mutation({
+  args: { roadmapId: v.id("userRoadmaps"), resourceUrl: v.string(), isCompleted: v.boolean() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const roadmap = await ctx.db.get(args.roadmapId);
+    if (!roadmap || roadmap.userId !== userId) throw new Error("Roadmap not found");
+
+    let newCompletedResources = [...(roadmap.completedResources ?? [])];
+    if (args.isCompleted && !newCompletedResources.includes(args.resourceUrl)) {
+      newCompletedResources.push(args.resourceUrl);
+    } else if (!args.isCompleted) {
+      newCompletedResources = newCompletedResources.filter(url => url !== args.resourceUrl);
+    }
+
+    await ctx.db.patch(args.roadmapId, {
+      completedResources: newCompletedResources
+    });
+
+    return newCompletedResources;
   }
 });

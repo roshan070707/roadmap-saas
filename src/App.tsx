@@ -10,6 +10,22 @@ import Explore from './pages/Explore';
 import Community from './pages/Community';
 import ShareView from './pages/ShareView';
 import Profile from './pages/Profile';
+import Methodology from './pages/Methodology';
+import Integrations from './pages/Integrations';
+import Pricing from './pages/Pricing';
+import Documentation from './pages/Documentation';
+import ApiReference from './pages/ApiReference';
+import Blog from './pages/Blog';
+import About from './pages/About';
+import Careers from './pages/Careers';
+import Changelog from './pages/Changelog';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import NotFound from './pages/NotFound';
+import Team from './pages/Team';
+import AdminDashboard from './pages/AdminDashboard';
+import Settings from './pages/Settings';
 import { ThemeProvider } from './components/ThemeProvider';
 import { CommandPalette } from './components/CommandPalette';
 
@@ -31,9 +47,25 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/discover" element={<Navigate to="/explore" replace />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/profile/:userId" element={<Profile />} />
-              {/* Catch-all route to redirect unknown URLs to Home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/profile/:identifier" element={<Profile />} />
+              {/* New Pages */}
+              <Route path="/methodology" element={<Methodology />} />
+              <Route path="/integrations" element={<Integrations />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/docs" element={<Documentation />} />
+              <Route path="/api-reference" element={<ApiReference />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/changelog" element={<Changelog />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/settings" element={<Settings />} />
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
           <CommandPalette />

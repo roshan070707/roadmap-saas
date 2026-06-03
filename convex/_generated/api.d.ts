@@ -18,9 +18,11 @@ import type * as intelligence from "../intelligence.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as notifications from "../notifications.js";
 import type * as profiles from "../profiles.js";
+import type * as projects from "../projects.js";
 import type * as roadmaps from "../roadmaps.js";
 import type * as study from "../study.js";
 import type * as users from "../users.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -39,9 +41,11 @@ declare const fullApi: ApiFromModules<{
   leaderboard: typeof leaderboard;
   notifications: typeof notifications;
   profiles: typeof profiles;
+  projects: typeof projects;
   roadmaps: typeof roadmaps;
   study: typeof study;
   users: typeof users;
+  waitlist: typeof waitlist;
 }>;
 
 /**
